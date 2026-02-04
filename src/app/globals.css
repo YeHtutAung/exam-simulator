@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+:root {
+  --sand: #f5f1e7;
+  --sand-200: #ebe4d2;
+  --sand-300: #ded3bb;
+  --ink: #1f2937;
+  --accent: #0f766e;
+  --accent-strong: #115e59;
+}
+
+body {
+  background: var(--sand);
+  color: var(--ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.bg-sand {
+  background-color: var(--sand);
+}
+
+.border-sand-300 {
+  border-color: var(--sand-300);
+}
+
+.text-accent {
+  color: var(--accent);
+}
+
+.bg-accent {
+  background-color: var(--accent);
+}
+
+.bg-accent-strong {
+  background-color: var(--accent-strong);
+}

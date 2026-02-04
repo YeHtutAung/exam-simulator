@@ -1,0 +1,90 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum QuestionType {
+  MCQ_SINGLE
+  NUMERIC
+  TEXT
+}
+
+enum AttachmentType {
+  IMAGE
+  PDF_SNIP
+  TABLE_IMAGE
+  OTHER
+}
+
+model Exam {
+  id        String     @id @default(uuid()) @db.Uuid
+  code      String?    @unique
+  title     String
+  session   String
+  paper     String
+  language  String
+  createdAt DateTime   @default(now())
+
+  questions Question[]
+}
+
+model Question {
+  id            String       @id @default(uuid()) @db.Uuid
+  examId        String       @db.Uuid
+  questionNo    Int
+  type          QuestionType
+  stem          String
+  correctAnswer String
+  explanation   String?
+  sourcePage    String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  exam        Exam        @relation(fields: [examId], references: [id], onDelete: Cascade)
+  choices     Choice[]
+  attachments Attachment[]
+
+  @@unique([examId, questionNo])
+  @@index([examId])
+  @@index([type])
+  @@index([stem])
+}
+
+model Choice {
+  id         String   @id @default(uuid()) @db.Uuid
+  questionId String   @db.Uuid
+  label      String
+  text       String
+  sortOrder  Int
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, label])
+  @@index([questionId])
+}
+
+model Attachment {
+  id         String         @id @default(uuid()) @db.Uuid
+  questionId String         @db.Uuid
+  type       AttachmentType
+  url        String
+  caption    String?
+  width      Int?
+  height     Int?
+  sortOrder  Int
+  createdAt  DateTime       @default(now())
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+}
