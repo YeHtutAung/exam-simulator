@@ -2,12 +2,13 @@ import { prisma } from "@/lib/prisma";
 import { QuestionForm } from "@/components/admin/QuestionForm";
 
 type EditQuestionPageProps = {
-  params: { questionId: string };
+  params: Promise<{ questionId: string }>;
 };
 
 export default async function EditQuestionPage({ params }: EditQuestionPageProps) {
+  const resolvedParams = await params;
   const question = await prisma.question.findUnique({
-    where: { id: params.questionId },
+    where: { id: resolvedParams.questionId },
     include: {
       choices: { orderBy: { sortOrder: "asc" } },
       attachments: { orderBy: { sortOrder: "asc" } },

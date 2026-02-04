@@ -97,7 +97,7 @@ export default async function ExamRunnerPage({ searchParams }: ExamRunnerPagePro
   });
 
   const normalizedQuestions =
-    questions.length > 0
+    questions.length >= 2
       ? questions.map((question) => ({
           id: question.id,
           stem: question.stem,

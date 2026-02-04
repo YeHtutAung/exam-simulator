@@ -3,12 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { DeleteButton } from "@/components/admin/DeleteButton";
 
 type AdminExamQuestionsPageProps = {
-  params: { examId: string };
+  params: Promise<{ examId: string }>;
 };
 
 export default async function AdminExamQuestionsPage({ params }: AdminExamQuestionsPageProps) {
+  const resolvedParams = await params;
   const exam = await prisma.exam.findUnique({
-    where: { id: params.examId },
+    where: { id: resolvedParams.examId },
   });
 
   if (!exam) {
@@ -20,7 +21,7 @@ export default async function AdminExamQuestionsPage({ params }: AdminExamQuesti
   }
 
   const questions = await prisma.question.findMany({
-    where: { examId: params.examId },
+    where: { examId: resolvedParams.examId },
     orderBy: { questionNo: "asc" },
   });
 

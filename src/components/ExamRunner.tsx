@@ -23,8 +23,8 @@ export function ExamRunner({ title, questions }: ExamRunnerProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
-  const currentQuestion = useMemo(() => questions[currentIndex], [questions, currentIndex]);
   const total = questions.length;
+  const currentQuestion = useMemo(() => questions[currentIndex], [questions, currentIndex]);
   const currentNumber = currentIndex + 1;
 
   const handleSelect = (value: string) => {
@@ -47,13 +47,17 @@ export function ExamRunner({ title, questions }: ExamRunnerProps) {
       </header>
 
       <section className="flex-1 py-8">
-        <ExamRunnerQuestion
-          questionId={currentQuestion.id}
-          stem={currentQuestion.stem}
-          choices={currentQuestion.choices}
-          selected={answers[currentQuestion.id]}
-          onChange={handleSelect}
-        />
+        {currentQuestion ? (
+          <ExamRunnerQuestion
+            questionId={currentQuestion.id}
+            stem={currentQuestion.stem}
+            choices={currentQuestion.choices}
+            selected={answers[currentQuestion.id]}
+            onChange={handleSelect}
+          />
+        ) : (
+          <p className="text-sm text-slate-600">No questions available.</p>
+        )}
       </section>
 
       <nav className="sticky bottom-0 border-t border-sand-300 bg-sand py-4">

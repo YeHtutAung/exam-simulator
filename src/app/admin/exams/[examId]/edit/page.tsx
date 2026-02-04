@@ -2,12 +2,13 @@ import { prisma } from "@/lib/prisma";
 import { ExamForm } from "@/components/admin/ExamForm";
 
 type EditExamPageProps = {
-  params: { examId: string };
+  params: Promise<{ examId: string }>;
 };
 
 export default async function EditExamPage({ params }: EditExamPageProps) {
+  const resolvedParams = await params;
   const exam = await prisma.exam.findUnique({
-    where: { id: params.examId },
+    where: { id: resolvedParams.examId },
   });
 
   if (!exam) {
