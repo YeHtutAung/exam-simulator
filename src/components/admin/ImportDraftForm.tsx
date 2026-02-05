@@ -3,8 +3,14 @@
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { importDraftSchema, ImportDraftInput } from "@/lib/validators/importDraft";
 import { useRouter } from "next/navigation";
+
+const importDraftFormSchema = importDraftSchema.extend({
+  questionPdf: z.any(),
+  answerPdf: z.any(),
+});
 
 type ImportDraftFormValues = ImportDraftInput & {
   questionPdf: FileList;
@@ -24,7 +30,7 @@ export function ImportDraftForm({ defaultValues }: ImportDraftFormProps) {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<ImportDraftFormValues>({
-    resolver: zodResolver(importDraftSchema),
+    resolver: zodResolver(importDraftFormSchema),
     defaultValues: {
       title: defaultValues?.title ?? "",
       session: defaultValues?.session ?? "",
