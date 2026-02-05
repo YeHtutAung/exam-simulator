@@ -20,15 +20,21 @@ export type QuestionCrop = {
   page: number;
   box: CropBox;
   fallback?: boolean;
+  reason?: string;
 };
 
-const QUESTION_REGEX = /\bQ\s*(\d+)\./i;
+const QUESTION_REGEX = /^Q\s*(\d+)\.$/i;
+const OPTION_REGEX = /^([a-d])\)/i;
+const FOOTER_REGEX = /^\s*-\s*\d+\s*-\s*$/;
 
-const MARGIN_TOP = 12;
-const MARGIN_BOTTOM = 14;
 const MARGIN_X = 12;
-const FOOTER_MARGIN = 30;
-const MIN_CROP_HEIGHT = 80;
+const BASE_TOP_PADDING = 8;
+const BASE_OPTION_PADDING = 12;
+const BASE_INTER_PADDING = 8;
+const BASE_FOOTER_PADDING = 8;
+const BASE_SAFE_MARGIN = 12;
+const BASE_MIN_HEIGHT = 120;
+const PAGE_TOP_MARGIN = 8;
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(value, max));
@@ -57,6 +63,11 @@ function findQuestionMarkers(items: any[], viewportHeight: number): Marker[] {
   return markers.sort((a, b) => a.y - b.y);
 }
 
+type PositionedText = {
+  text: string;
+  y: number;
+};
+
 function buildCropBox(
   viewportWidth: number,
   viewportHeight: number,
@@ -77,6 +88,87 @@ function buildCropBox(
   };
 }
 
+function computeQuestionCropBox({
+  items,
+  questionNo,
+  viewportWidth,
+  viewportHeight,
+  scale,
+  markers,
+  footerY,
+}: {
+  items: PositionedText[];
+  questionNo: number;
+  viewportWidth: number;
+  viewportHeight: number;
+  scale: number;
+  markers: Marker[];
+  footerY: number | null;
+}): { box: CropBox; fallback: boolean; reason: string; topY: number; bottomY: number } {
+  const topPadding = BASE_TOP_PADDING * scale;
+  const optionPadding = BASE_OPTION_PADDING * scale;
+  const interPadding = BASE_INTER_PADDING * scale;
+  const footerPadding = BASE_FOOTER_PADDING * scale;
+  const safeMargin = BASE_SAFE_MARGIN * scale;
+  const minHeight = BASE_MIN_HEIGHT * (scale / 2);
+
+  const markerIndex = markers.findIndex((marker) => marker.questionNo === questionNo);
+  const marker = markers[markerIndex];
+  const nextMarker = markerIndex >= 0 ? markers[markerIndex + 1] : undefined;
+  const pageBottom = viewportHeight - safeMargin;
+
+  let topY = marker ? marker.y - topPadding : PAGE_TOP_MARGIN;
+  topY = Math.max(topY, PAGE_TOP_MARGIN);
+
+  let bottomY = pageBottom;
+  let reason = "page-bottom";
+
+  if (marker) {
+    const bandStart = marker.y;
+    const bandEnd = nextMarker ? nextMarker.y : viewportHeight;
+    const optionItems = items.filter(
+      (item) => item.y >= bandStart && item.y <= bandEnd && OPTION_REGEX.test(item.text)
+    );
+
+    if (optionItems.length > 0) {
+      const lastOptionY = Math.max(...optionItems.map((item) => item.y));
+      bottomY = lastOptionY + optionPadding;
+      reason = "options";
+    } else if (nextMarker) {
+      bottomY = nextMarker.y - interPadding;
+      reason = "next-question";
+    } else if (footerY !== null) {
+      bottomY = footerY - footerPadding;
+      reason = "last-question-footer";
+    } else {
+      bottomY = pageBottom;
+      reason = "last-question-page";
+    }
+  }
+
+  if (footerY !== null) {
+    bottomY = Math.min(bottomY, footerY - footerPadding);
+    if (reason !== "last-question-footer") {
+      reason = `${reason}+footer-guard`;
+    }
+  }
+
+  let box = buildCropBox(viewportWidth, viewportHeight, topY, bottomY);
+  let fallback = false;
+
+  if (box.height < minHeight || box.height <= 1) {
+    const fallbackTop = PAGE_TOP_MARGIN;
+    const fallbackBottom = footerY !== null ? footerY - footerPadding : pageBottom;
+    box = buildCropBox(viewportWidth, viewportHeight, fallbackTop, fallbackBottom);
+    fallback = true;
+    reason = "fallback-full-page";
+    topY = fallbackTop;
+    bottomY = fallbackBottom;
+  }
+
+  return { box, fallback, reason, topY, bottomY };
+}
+
 export async function computeQuestionCrops(
   buffer: Buffer,
   scale: number
@@ -90,30 +182,44 @@ export async function computeQuestionCrops(
     const page = await doc.getPage(pageNum);
     const viewport = page.getViewport({ scale });
     const textContent = await page.getTextContent();
+    const items: PositionedText[] = textContent.items
+      .filter((item) => "str" in item && item.transform)
+      .map((item) => ({
+        text: String(item.str).trim(),
+        y: toPixelY(viewport.height, item.transform[5]),
+      }));
     const markers = findQuestionMarkers(textContent.items, viewport.height);
+    const footerItems = items.filter((item) => FOOTER_REGEX.test(item.text));
+    const footerY = footerItems.length > 0 ? Math.max(...footerItems.map((item) => item.y)) : null;
 
     for (let i = 0; i < markers.length; i += 1) {
       const marker = markers[i];
-      const nextMarker = markers[i + 1];
-      const top = marker.y - MARGIN_TOP;
-      const bottom =
-        (nextMarker ? nextMarker.y : viewport.height - FOOTER_MARGIN) + MARGIN_BOTTOM;
-
-      let box = buildCropBox(viewport.width, viewport.height, top, bottom);
-      let fallback = false;
-      if (box.height < MIN_CROP_HEIGHT) {
-        const fullTop = clamp(marker.y - MARGIN_TOP, 0, viewport.height);
-        const fullBottom = clamp(viewport.height - FOOTER_MARGIN, 0, viewport.height);
-        box = buildCropBox(viewport.width, viewport.height, fullTop, fullBottom);
-        fallback = true;
-      }
+      const crop = computeQuestionCropBox({
+        items,
+        questionNo: marker.questionNo,
+        viewportWidth: viewport.width,
+        viewportHeight: viewport.height,
+        scale,
+        markers,
+        footerY,
+      });
 
       crops.push({
         questionNo: marker.questionNo,
         page: pageNum,
-        box,
-        fallback,
+        box: crop.box,
+        fallback: crop.fallback,
+        reason: crop.reason,
       });
+
+      if (process.env.NODE_ENV === "development") {
+        // eslint-disable-next-line no-console
+        console.log(
+          `[crop] Q${marker.questionNo} top=${Math.round(crop.topY)} bottom=${Math.round(
+            crop.bottomY
+          )} reason=${crop.reason}`
+        );
+      }
     }
   }
 
