@@ -1,6 +1,7 @@
 import os from "node:os";
 import path from "node:path";
 import fs from "node:fs/promises";
+import { pathToFileURL } from "node:url";
 import { prisma } from "../lib/prisma";
 import { parseFeAnswerPdf } from "../../lib/importer/feAnswerParser";
 import { parseFeQuestionPdf } from "../../lib/importer/feQuestionParser";
@@ -240,7 +241,14 @@ async function runWorkerLoop() {
   }
 }
 
-if (typeof require !== "undefined" && require.main === module) {
+const isMain = (() => {
+  if (!process.argv[1]) {
+    return false;
+  }
+  return import.meta.url === pathToFileURL(process.argv[1]).href;
+})();
+
+if (isMain) {
   runWorkerLoop().catch((error) => {
     console.error(error);
     process.exit(1);
