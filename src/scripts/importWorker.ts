@@ -1,10 +1,10 @@
 import os from "node:os";
 import path from "node:path";
 import fs from "node:fs/promises";
-import { prisma } from "../lib/prisma.js";
-import { parseFeAnswerPdf } from "../../lib/importer/feAnswerParser.js";
-import { parseFeQuestionPdf } from "../../lib/importer/feQuestionParser.js";
-import { renderPdfPagesToPng } from "../lib/importer/pdfPageRenderer.js";
+import { prisma } from "../lib/prisma";
+import { parseFeAnswerPdf } from "../../lib/importer/feAnswerParser";
+import { parseFeQuestionPdf } from "../../lib/importer/feQuestionParser";
+import { renderPdfPagesToPng } from "../lib/importer/pdfPageRenderer";
 import "dotenv/config";
 
 const LOCK_TIMEOUT_MINUTES = 10;
