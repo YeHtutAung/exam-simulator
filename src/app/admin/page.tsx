@@ -16,6 +16,15 @@ export default function AdminPage() {
           <p className="text-sm font-semibold">Manage Exams</p>
           <p className="mt-2 text-xs text-slate-500">Create, edit, and remove exams.</p>
         </Link>
+        <Link
+          href="/admin/import"
+          className="rounded-2xl border border-sand-300 bg-white p-5 transition hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <p className="text-sm font-semibold">Import Drafts</p>
+          <p className="mt-2 text-xs text-slate-500">
+            Upload question and answer PDFs to build a draft.
+          </p>
+        </Link>
       </div>
     </div>
   );
