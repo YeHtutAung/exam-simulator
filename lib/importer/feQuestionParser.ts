@@ -93,20 +93,51 @@ export async function parseFeQuestionPdf(buffer: Buffer): Promise<FeQuestion[]> 
     chunks.push({ questionNo, chunk });
   }
 
-  const results: FeQuestion[] = chunks.map(({ questionNo, chunk }) => {
+  const resultsMap = new Map<number, FeQuestion>();
+
+  for (const { questionNo, chunk } of chunks) {
+    if (questionNo < 1 || questionNo > 80) {
+      continue;
+    }
+
     const normalizedChunk = chunk.replace(/\r/g, " ");
+    const isSample = /sample question/i.test(normalizedChunk);
+    const choices = extractChoices(normalizedChunk);
     const indices = findChoiceIndices(normalizedChunk);
     const firstChoiceIndex = Math.min(...Object.values(indices).filter((i) => i >= 0));
     const stemRaw =
       firstChoiceIndex >= 0 ? normalizedChunk.slice(0, firstChoiceIndex) : normalizedChunk;
     const stem = normalizeWhitespace(stemRaw);
 
-    return {
+    const candidate: FeQuestion = {
       questionNo,
       stem,
-      choices: extractChoices(normalizedChunk),
+      choices,
     };
-  });
+
+    const existing = resultsMap.get(questionNo);
+    if (!existing) {
+      if (!isSample) {
+        resultsMap.set(questionNo, candidate);
+      }
+      continue;
+    }
+
+    if (!existing.choices && choices) {
+      resultsMap.set(questionNo, candidate);
+      continue;
+    }
+
+    if (existing.choices && !choices) {
+      continue;
+    }
+
+    if (!isSample && existing.stem.length < candidate.stem.length) {
+      resultsMap.set(questionNo, candidate);
+    }
+  }
+
+  const results = Array.from(resultsMap.values());
 
   const missing: number[] = [];
   for (let i = 1; i <= 80; i += 1) {
