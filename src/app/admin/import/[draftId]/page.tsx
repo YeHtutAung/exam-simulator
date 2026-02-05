@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { headers } from "next/headers";
+import { PublishDraftButton } from "@/components/admin/PublishDraftButton";
 
 type DraftQuestion = {
   id: string;
@@ -18,6 +19,7 @@ type DraftResponse = {
   status: string;
   errors: unknown;
   warnings: unknown;
+  publishedExamId?: string | null;
   questions: DraftQuestion[];
 };
 
@@ -75,9 +77,16 @@ export default async function ImportDraftDetailPage({
             {draft.title} · {draft.session} {draft.paper} · {draft.language}
           </p>
         </div>
-        <Link href="/admin/import" className="text-sm font-semibold text-accent">
-          New import
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link href="/admin/import" className="text-sm font-semibold text-accent">
+            New import
+          </Link>
+          <PublishDraftButton
+            draftId={draft.id}
+            status={draft.status}
+            publishedExamId={draft.publishedExamId}
+          />
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -130,6 +139,7 @@ export default async function ImportDraftDetailPage({
               <th className="px-4 py-3">Stem</th>
               <th className="px-4 py-3">Answer</th>
               <th className="px-4 py-3">Warnings</th>
+              <th className="px-4 py-3 text-right">Edit</th>
             </tr>
           </thead>
           <tbody>
@@ -143,6 +153,14 @@ export default async function ImportDraftDetailPage({
                   </td>
                   <td className="px-4 py-3 uppercase">{question.correctAnswer ?? "-"}</td>
                   <td className="px-4 py-3 text-slate-600">{questionWarnings}</td>
+                  <td className="px-4 py-3 text-right">
+                    <Link
+                      href={`/admin/import/${draft.id}/questions/${question.id}`}
+                      className="text-xs font-semibold text-accent"
+                    >
+                      Edit
+                    </Link>
+                  </td>
                 </tr>
               );
             })}
