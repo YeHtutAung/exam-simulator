@@ -84,8 +84,8 @@ async function finalizeDraft(
     where: { id: draftId },
     data: {
       status,
-      errors: errors.length > 0 ? errors : null,
-      warnings: warnings.length > 0 ? warnings : null,
+      errors: errors.length > 0 ? errors : undefined,
+      warnings: warnings.length > 0 ? warnings : undefined,
       finishedAt: new Date(),
       stage: "DONE",
       progressInt: 100,
@@ -178,7 +178,7 @@ export async function processNextImportDraftOnce() {
             stem: question.stem,
             correctAnswer: answers[question.questionNo] ?? null,
             sourcePage: question.sourcePage ? String(question.sourcePage) : null,
-            warnings: questionWarnings.length > 0 ? questionWarnings : null,
+            warnings: questionWarnings.length > 0 ? questionWarnings : undefined,
           },
         });
 
