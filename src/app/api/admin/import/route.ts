@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import path from "node:path";
 import { prisma } from "@/lib/prisma";
 import { parseFeAnswerPdf } from "../../../../../lib/importer/feAnswerParser";
 import { parseFeQuestionPdf } from "../../../../../lib/importer/feQuestionParser";
+import { renderPdfPagesToPng } from "@/lib/importer/pdfPageRenderer";
 
 type DraftStatus =
   | "PARSING"
@@ -69,10 +71,23 @@ export async function POST(request: Request) {
       answerPdf.arrayBuffer(),
     ]);
 
-    const [questions, answers] = await Promise.all([
+    const [questions, answers, renderedPages] = await Promise.all([
       parseFeQuestionPdf(Buffer.from(questionBuffer)),
       parseFeAnswerPdf(Buffer.from(answerBuffer)),
+      renderPdfPagesToPng(
+        Buffer.from(questionBuffer),
+        path.join(
+          process.cwd(),
+          "public",
+          "uploads",
+          "imports",
+          draft.id,
+          "pages"
+        )
+      ),
     ]);
+
+    const pageMap = new Map(renderedPages.map((entry) => [entry.page, entry]));
 
     if (questions.length !== 80) {
       throw new Error(`Expected 80 questions, found ${questions.length}.`);
@@ -140,6 +155,23 @@ export async function POST(request: Request) {
               sortOrder: choice.sortOrder,
             })),
           });
+        }
+
+        if (question.sourcePage) {
+          const pageInfo = pageMap.get(question.sourcePage);
+          if (pageInfo) {
+            await tx.importDraftAttachment.create({
+              data: {
+                draftQuestionId: created.id,
+                type: "IMAGE",
+                url: pageInfo.url,
+                caption: `Source page ${pageInfo.page}`,
+                width: pageInfo.width,
+                height: pageInfo.height,
+                sortOrder: 1,
+              },
+            });
+          }
         }
       }
     });

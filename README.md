@@ -96,6 +96,14 @@ npx vitest run
 ```
 Upload question/answer PDFs, then review the draft at `/admin/import/[draftId]`. Fix issues in the per-question editor and publish when status is `READY_TO_PUBLISH`.
 
+### Phase 2 Attachments MVP
+The import flow renders PDF pages to PNGs and attaches a page image to each question using its `sourcePage`.
+
+Notes:
+- Rendered images are stored under `public/uploads/imports/{draftId}/pages/`.
+- Draft attachments are created as type `IMAGE` with a caption like `Source page N`.
+- When publishing, draft attachments are copied into the `Attachment` table and appear on the public question page.
+
 ### Common failures
 - `ENOENT: no such file or directory, open '/mnt/data/...'`  
   The test fixtures are missing. Copy PDFs to `/mnt/data` (or `C:\mnt\data` on Windows).

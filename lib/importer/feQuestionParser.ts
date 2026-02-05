@@ -1,4 +1,5 @@
 import pdfParse from "pdf-parse";
+import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
 
 export type FeQuestionChoiceMap = {
   a: string;
@@ -70,8 +71,41 @@ function extractChoices(chunk: string): FeQuestionChoiceMap | null {
   return allFilled ? parts : null;
 }
 
+async function mapQuestionPages(buffer: Buffer): Promise<Map<number, number>> {
+  const doc = await pdfjs
+    .getDocument({ data: new Uint8Array(buffer), disableWorker: true })
+    .promise;
+  const pageMap = new Map<number, number>();
+
+  for (let pageNum = 1; pageNum <= doc.numPages; pageNum += 1) {
+    const page = await doc.getPage(pageNum);
+    const textContent = await page.getTextContent();
+    const pageText = textContent.items
+      .map((item) => ("str" in item ? item.str : ""))
+      .join(" ");
+    const normalized = pageText.replace(/\s+/g, " ");
+
+    let match: RegExpExecArray | null;
+    while ((match = QUESTION_MARKER.exec(normalized)) !== null) {
+      const questionNo = Number(match[1]);
+      if (questionNo < 1 || questionNo > 80) {
+        continue;
+      }
+      if (!pageMap.has(questionNo)) {
+        pageMap.set(questionNo, pageNum);
+      }
+    }
+  }
+
+  QUESTION_MARKER.lastIndex = 0;
+  return pageMap;
+}
+
 export async function parseFeQuestionPdf(buffer: Buffer): Promise<FeQuestion[]> {
-  const parsed = await pdfParse(buffer);
+  const [parsed, pageMap] = await Promise.all([
+    pdfParse(buffer),
+    mapQuestionPages(buffer),
+  ]);
   const text = parsed.text || "";
 
   if (!text.trim()) {
@@ -113,6 +147,7 @@ export async function parseFeQuestionPdf(buffer: Buffer): Promise<FeQuestion[]> 
       questionNo,
       stem,
       choices,
+      sourcePage: pageMap.get(questionNo),
     };
 
     const existing = resultsMap.get(questionNo);

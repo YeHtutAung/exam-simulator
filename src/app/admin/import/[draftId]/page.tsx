@@ -8,6 +8,7 @@ type DraftQuestion = {
   stem: string;
   correctAnswer: string | null;
   warnings: unknown;
+  attachments: Array<{ id: string; url: string }>;
 };
 
 type DraftResponse = {
@@ -139,12 +140,14 @@ export default async function ImportDraftDetailPage({
               <th className="px-4 py-3">Stem</th>
               <th className="px-4 py-3">Answer</th>
               <th className="px-4 py-3">Warnings</th>
+              <th className="px-4 py-3">Image</th>
               <th className="px-4 py-3 text-right">Edit</th>
             </tr>
           </thead>
           <tbody>
             {draft.questions.map((question) => {
               const questionWarnings = countList(question.warnings);
+              const hasImage = question.attachments.length > 0;
               return (
                 <tr key={question.id} className="border-t border-sand-200">
                   <td className="px-4 py-3 font-semibold">{question.questionNo}</td>
@@ -153,6 +156,9 @@ export default async function ImportDraftDetailPage({
                   </td>
                   <td className="px-4 py-3 uppercase">{question.correctAnswer ?? "-"}</td>
                   <td className="px-4 py-3 text-slate-600">{questionWarnings}</td>
+                  <td className="px-4 py-3 text-slate-600">
+                    {hasImage ? "Yes" : "No"}
+                  </td>
                   <td className="px-4 py-3 text-right">
                     <Link
                       href={`/admin/import/${draft.id}/questions/${question.id}`}

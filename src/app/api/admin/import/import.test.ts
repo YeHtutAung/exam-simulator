@@ -26,49 +26,54 @@ describe("POST /api/admin/import", () => {
         readFile("/mnt/data/2020A_FE_AM_Answer.pdf"),
       ]);
 
-    const formData = new FormData();
-    formData.set("title", "FE 2020A AM");
-    formData.set("session", "2020 Autumn");
-    formData.set("paper", "AM");
-    formData.set("language", "JA");
-    formData.set(
-      "questionPdf",
-      new File([questionPdf], "2020A_FE_AM_Question.pdf", {
-        type: "application/pdf",
-      })
-    );
-    formData.set(
-      "answerPdf",
-      new File([answerPdf], "2020A_FE_AM_Answer.pdf", {
-        type: "application/pdf",
-      })
-    );
+      const formData = new FormData();
+      formData.set("title", "FE 2020A AM");
+      formData.set("session", "2020 Autumn");
+      formData.set("paper", "AM");
+      formData.set("language", "JA");
+      formData.set(
+        "questionPdf",
+        new File([questionPdf], "2020A_FE_AM_Question.pdf", {
+          type: "application/pdf",
+        })
+      );
+      formData.set(
+        "answerPdf",
+        new File([answerPdf], "2020A_FE_AM_Answer.pdf", {
+          type: "application/pdf",
+        })
+      );
 
-    const response = await POST(
-      new Request("http://localhost/api/admin/import", {
-        method: "POST",
-        body: formData,
-      })
-    );
+      const response = await POST(
+        new Request("http://localhost/api/admin/import", {
+          method: "POST",
+          body: formData,
+        })
+      );
 
-    expect(response.status).toBe(200);
-    const payload = await response.json();
+      expect(response.status).toBe(200);
+      const payload = await response.json();
 
-    expect(payload.draftId).toBeTruthy();
-    expect(["NEEDS_REVIEW", "READY_TO_PUBLISH"]).toContain(payload.status);
+      expect(payload.draftId).toBeTruthy();
+      expect(["NEEDS_REVIEW", "READY_TO_PUBLISH"]).toContain(payload.status);
 
-    draftId = payload.draftId as string;
+      draftId = payload.draftId as string;
 
-    const fetchResponse = await GET(
-      new Request(
-        `http://localhost/api/admin/import/${encodeURIComponent(draftId)}`
-      ),
-      { params: { draftId } }
-    );
+      const fetchResponse = await GET(
+        new Request(
+          `http://localhost/api/admin/import/${encodeURIComponent(draftId)}`
+        ),
+        { params: { draftId } }
+      );
 
-    expect(fetchResponse.status).toBe(200);
-    const draft = await fetchResponse.json();
+      expect(fetchResponse.status).toBe(200);
+      const draft = await fetchResponse.json();
       expect(draft.questions).toHaveLength(80);
+      const withAttachments = draft.questions.filter(
+        (question: { attachments?: unknown[] }) =>
+          Array.isArray(question.attachments) && question.attachments.length > 0
+      );
+      expect(withAttachments.length).toBeGreaterThan(0);
     },
     30000
   );

@@ -45,3 +45,4 @@ next-env.d.ts
 # local fixtures / uploads
 /pdf
 /template
+/public/uploads

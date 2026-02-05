@@ -16,6 +16,9 @@ export default async function ImportDraftQuestionEditPage({
       choices: {
         orderBy: { sortOrder: "asc" },
       },
+      attachments: {
+        orderBy: { sortOrder: "asc" },
+      },
       draft: true,
     },
   });
@@ -67,6 +70,28 @@ export default async function ImportDraftQuestionEditPage({
           choices,
         }}
       />
+
+      {question.attachments.length > 0 && (
+        <div className="rounded-2xl border border-sand-300 bg-white p-4">
+          <p className="text-sm font-semibold text-slate-700">Attachment preview</p>
+          <div className="mt-3 grid gap-4 md:grid-cols-2">
+            {question.attachments.map((attachment) => (
+              <div key={attachment.id} className="rounded-xl border border-sand-300 bg-sand p-3">
+                <img
+                  src={attachment.url}
+                  alt={attachment.caption ?? "Attachment"}
+                  className="w-full rounded-lg"
+                  width={attachment.width ?? undefined}
+                  height={attachment.height ?? undefined}
+                />
+                {attachment.caption && (
+                  <p className="mt-2 text-xs text-slate-600">{attachment.caption}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
