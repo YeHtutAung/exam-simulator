@@ -1,14 +1,13 @@
+import "dotenv/config";
 import { readFile } from "node:fs/promises";
 import { FormData, File } from "undici";
-import { afterAll, describe, expect, it, vi } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
 
 import { prisma } from "@/lib/prisma";
 import { GET } from "./[draftId]/route";
 import { POST } from "./route";
 
 describe("POST /api/admin/import", () => {
-  vi.setTimeout(30000);
-
   let draftId: string | null = null;
 
   afterAll(async () => {
@@ -19,11 +18,13 @@ describe("POST /api/admin/import", () => {
     }
   });
 
-  it("creates a draft and stores 80 questions", async () => {
-    const [questionPdf, answerPdf] = await Promise.all([
-      readFile("/mnt/data/2020A_FE_AM_Question.pdf"),
-      readFile("/mnt/data/2020A_FE_AM_Answer.pdf"),
-    ]);
+  it(
+    "creates a draft and stores 80 questions",
+    async () => {
+      const [questionPdf, answerPdf] = await Promise.all([
+        readFile("/mnt/data/2020A_FE_AM_Question.pdf"),
+        readFile("/mnt/data/2020A_FE_AM_Answer.pdf"),
+      ]);
 
     const formData = new FormData();
     formData.set("title", "FE 2020A AM");
@@ -67,6 +68,8 @@ describe("POST /api/admin/import", () => {
 
     expect(fetchResponse.status).toBe(200);
     const draft = await fetchResponse.json();
-    expect(draft.questions).toHaveLength(80);
-  });
+      expect(draft.questions).toHaveLength(80);
+    },
+    30000
+  );
 });
