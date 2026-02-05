@@ -27,10 +27,10 @@ enum AttachmentType {
 }
 
 enum ImportDraftStatus {
-  DRAFT
-  READY
-  PUBLISHED
-  ERROR
+  PARSING
+  READY_TO_PUBLISH
+  NEEDS_REVIEW
+  FAILED
 }
 
 model Exam {
@@ -103,7 +103,7 @@ model ImportDraft {
   session          String
   paper            String
   language         String
-  status           ImportDraftStatus @default(DRAFT)
+  status           ImportDraftStatus @default(PARSING)
   errors           Json?
   warnings         Json?
   publishedExamId  String?           @db.Uuid
