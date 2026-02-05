@@ -7,10 +7,6 @@ import { prisma } from "../lib/prisma";
 import { parseFeAnswerPdf } from "../../lib/importer/feAnswerParser";
 import { parseFeQuestionPdf } from "../../lib/importer/feQuestionParser";
 import { renderPdfPagesToPng } from "../lib/importer/pdfPageRenderer";
-import {
-  extractQuestionCrops,
-  cropQuestionImagesFromPage,
-} from "../lib/importer/pdfQuestionImageExtractor";
 
 const LOCK_TIMEOUT_MINUTES = 10;
 const POLL_INTERVAL_MS = 2000;
@@ -137,19 +133,18 @@ export async function processNextImportDraftOnce() {
     const questions = await parseFeQuestionPdf(questionPdf);
 
     await updateProgress(draftId, "RENDER_PAGES", 70);
-    const pagesDir = path.join(
-      process.cwd(),
-      "public",
-      "uploads",
-      "imports",
-      draftId,
-      "pages"
+    const renderedPages = await renderPdfPagesToPng(
+      questionPdf,
+      path.join(
+        process.cwd(),
+        "public",
+        "uploads",
+        "imports",
+        draftId,
+        "pages"
+      )
     );
-    const renderedPages = await renderPdfPagesToPng(questionPdf, pagesDir);
     const pageMap = new Map(renderedPages.map((entry) => [entry.page, entry]));
-    const crops = await extractQuestionCrops(questionPdf, 2);
-    const cropMap = new Map(crops.map((crop) => [crop.questionNo, crop]));
-    const publicRoot = path.join(process.cwd(), "public");
 
     await updateProgress(draftId, "SAVE_DRAFT", 90);
 
@@ -206,53 +201,20 @@ export async function processNextImportDraftOnce() {
           });
         }
 
-        const crop = cropMap.get(question.questionNo);
-        if (crop) {
-          const pageInfo = pageMap.get(crop.page);
+        if (question.sourcePage) {
+          const pageInfo = pageMap.get(question.sourcePage);
           if (pageInfo) {
-            const outputDir = path.join(
-              process.cwd(),
-              "public",
-              "uploads",
-              "imports",
-              draftId,
-              "questions",
-              `q-${question.questionNo}`
-            );
-            const outputs = await cropQuestionImagesFromPage(
-              path.join(pagesDir, `page-${crop.page}.png`),
-              outputDir,
-              crop
-            );
-            for (const output of outputs) {
-              let urlPath = output.filePath
-                .replace(publicRoot, "")
-                .split(path.sep)
-                .join("/");
-              if (!urlPath.startsWith("/")) {
-                urlPath = `/${urlPath}`;
-              }
-              await tx.importDraftAttachment.create({
-                data: {
-                  draftQuestionId: created.id,
-                  type: "IMAGE",
-                  url: urlPath,
-                  caption: output.role,
-                  width: output.width,
-                  height: output.height,
-                  sortOrder:
-                    output.role === "STEM"
-                      ? 1
-                      : output.role === "CHOICE_A"
-                        ? 2
-                        : output.role === "CHOICE_B"
-                          ? 3
-                          : output.role === "CHOICE_C"
-                            ? 4
-                            : 5,
-                },
-              });
-            }
+            await tx.importDraftAttachment.create({
+              data: {
+                draftQuestionId: created.id,
+                type: "IMAGE",
+                url: pageInfo.url,
+                caption: `Source page ${pageInfo.page}`,
+                width: pageInfo.width,
+                height: pageInfo.height,
+                sortOrder: 1,
+              },
+            });
           }
         }
       }

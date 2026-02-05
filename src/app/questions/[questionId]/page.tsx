@@ -26,17 +26,6 @@ export default async function QuestionPage({ params }: QuestionPageProps) {
     );
   }
 
-  const stemImage = question.attachments.find(
-    (attachment) => attachment.caption === "STEM"
-  );
-  const choiceImages = {
-    a: question.attachments.find((attachment) => attachment.caption === "CHOICE_A"),
-    b: question.attachments.find((attachment) => attachment.caption === "CHOICE_B"),
-    c: question.attachments.find((attachment) => attachment.caption === "CHOICE_C"),
-    d: question.attachments.find((attachment) => attachment.caption === "CHOICE_D"),
-  };
-  const hasImageChoices = Object.values(choiceImages).some(Boolean);
-
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-2 text-xs uppercase text-slate-500">
@@ -48,16 +37,10 @@ export default async function QuestionPage({ params }: QuestionPageProps) {
       </div>
 
       <div className="rounded-3xl border border-sand-300 bg-white p-6 shadow-sm">
-        {question.attachments.filter((attachment) => !["STEM", "CHOICE_A", "CHOICE_B", "CHOICE_C", "CHOICE_D"].includes(attachment.caption ?? "")).length > 0 && (
+
+        {question.attachments.length > 0 && (
           <div className="mt-6 grid gap-4 md:grid-cols-2">
-            {question.attachments
-              .filter(
-                (attachment) =>
-                  !["STEM", "CHOICE_A", "CHOICE_B", "CHOICE_C", "CHOICE_D"].includes(
-                    attachment.caption ?? ""
-                  )
-              )
-              .map((attachment) => (
+            {question.attachments.map((attachment) => (
               <div key={attachment.id} className="rounded-2xl border border-sand-300 bg-sand p-3">
                 {attachment.type === "IMAGE" || attachment.type === "TABLE_IMAGE" ? (
                   <img
@@ -85,55 +68,7 @@ export default async function QuestionPage({ params }: QuestionPageProps) {
           </div>
         )}
 
-        {question.type === "MCQ_SINGLE" && hasImageChoices && (
-          <div className="mt-6 space-y-4">
-            {stemImage && (
-              <img
-                src={stemImage.url}
-                alt={stemImage.caption ?? "Question stem"}
-                className="w-full rounded-2xl border border-sand-300"
-                width={stemImage.width ?? undefined}
-                height={stemImage.height ?? undefined}
-              />
-            )}
-            <div className="grid gap-4 md:grid-cols-2">
-              {(["a", "b", "c", "d"] as const).map((label) => {
-                const image = choiceImages[label];
-                if (!image) {
-                  return null;
-                }
-                const inputId = `mcq-${question.id}-${label}`;
-                return (
-                  <label
-                    key={label}
-                    htmlFor={inputId}
-                    className="flex cursor-pointer items-start gap-3 rounded-2xl border border-sand-300 bg-sand p-3"
-                  >
-                    <input
-                      id={inputId}
-                      type="radio"
-                      name={`mcq-${question.id}`}
-                      value={label}
-                      className="mt-2 h-4 w-4 accent-teal-700"
-                    />
-                    <div className="flex-1 space-y-2">
-                      <p className="text-xs font-semibold uppercase text-slate-500">{label})</p>
-                      <img
-                        src={image.url}
-                        alt={`${label} choice`}
-                        className="w-full rounded-xl"
-                        width={image.width ?? undefined}
-                        height={image.height ?? undefined}
-                      />
-                    </div>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {question.type === "MCQ_SINGLE" && !hasImageChoices && (
+        {question.type === "MCQ_SINGLE" && (
           <div className="mt-6">
             <QuestionMCQInlinePractice
               questionId={question.id}
