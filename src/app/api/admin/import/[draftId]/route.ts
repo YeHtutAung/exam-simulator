@@ -2,14 +2,15 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 type Params = {
-  params: {
+  params: Promise<{
     draftId: string;
-  };
+  }>;
 };
 
 export async function GET(_request: Request, { params }: Params) {
+  const resolvedParams = await params;
   const draft = await prisma.importDraft.findUnique({
-    where: { id: params.draftId },
+    where: { id: resolvedParams.draftId },
     include: {
       questions: {
         orderBy: { questionNo: "asc" },

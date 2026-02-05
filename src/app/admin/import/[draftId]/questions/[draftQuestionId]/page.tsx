@@ -5,12 +5,13 @@ import { ImportDraftQuestionForm } from "@/components/admin/ImportDraftQuestionF
 export default async function ImportDraftQuestionEditPage({
   params,
 }: {
-  params: { draftId: string; draftQuestionId: string };
+  params: Promise<{ draftId: string; draftQuestionId: string }>;
 }) {
+  const resolvedParams = await params;
   const question = await prisma.importDraftQuestion.findFirst({
     where: {
-      id: params.draftQuestionId,
-      draftId: params.draftId,
+      id: resolvedParams.draftQuestionId,
+      draftId: resolvedParams.draftId,
     },
     include: {
       choices: {
@@ -54,7 +55,7 @@ export default async function ImportDraftQuestionEditPage({
           </p>
         </div>
         <Link
-          href={`/admin/import/${params.draftId}`}
+          href={`/admin/import/${resolvedParams.draftId}`}
           className="text-sm font-semibold text-accent"
         >
           Back to draft
@@ -62,7 +63,7 @@ export default async function ImportDraftQuestionEditPage({
       </div>
 
       <ImportDraftQuestionForm
-        draftId={params.draftId}
+        draftId={resolvedParams.draftId}
         questionId={question.id}
         initialValues={{
           stem: question.stem,

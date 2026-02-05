@@ -3,10 +3,10 @@ import { prisma } from "@/lib/prisma";
 import { importDraftQuestionSchema } from "@/lib/validators/importDraftQuestion";
 
 type Params = {
-  params: {
+  params: Promise<{
     draftId: string;
     draftQuestionId: string;
-  };
+  }>;
 };
 
 function buildQuestionWarnings(payload: {
@@ -60,6 +60,7 @@ function computeDraftStatus(draft: {
 }
 
 export async function PATCH(request: Request, { params }: Params) {
+  const resolvedParams = await params;
   const body = await request.json();
   const parsed = importDraftQuestionSchema.safeParse(body);
 
@@ -72,8 +73,8 @@ export async function PATCH(request: Request, { params }: Params) {
 
   const draftQuestion = await prisma.importDraftQuestion.findFirst({
     where: {
-      id: params.draftQuestionId,
-      draftId: params.draftId,
+      id: resolvedParams.draftQuestionId,
+      draftId: resolvedParams.draftId,
     },
     include: {
       draft: true,
