@@ -29,9 +29,9 @@ const FOOTER_REGEX = /^\s*-\s*\d+\s*-\s*$/;
 
 const MARGIN_X = 12;
 const BASE_TOP_PADDING = 8;
-const BASE_OPTION_PADDING = 12;
-const BASE_INTER_PADDING = 8;
-const BASE_FOOTER_PADDING = 8;
+const BASE_OPTION_PADDING = 20;
+const BASE_INTER_PADDING = 16;
+const BASE_FOOTER_PADDING = 16;
 const BASE_SAFE_MARGIN = 12;
 const BASE_MIN_HEIGHT = 120;
 const PAGE_TOP_MARGIN = 8;
@@ -114,7 +114,9 @@ function computeQuestionCropBox({
 
   const markerIndex = markers.findIndex((marker) => marker.questionNo === questionNo);
   const marker = markers[markerIndex];
-  const nextMarker = markerIndex >= 0 ? markers[markerIndex + 1] : undefined;
+  const candidateNext = markerIndex >= 0 ? markers[markerIndex + 1] : undefined;
+  const nextMarker =
+    marker && candidateNext && candidateNext.y > marker.y ? candidateNext : undefined;
   const pageBottom = viewportHeight - safeMargin;
 
   let topY = marker ? marker.y - topPadding : PAGE_TOP_MARGIN;
@@ -129,9 +131,11 @@ function computeQuestionCropBox({
     const optionItems = items.filter(
       (item) => item.y >= bandStart && item.y <= bandEnd && OPTION_REGEX.test(item.text)
     );
+    const optionCount = optionItems.length;
+    const lastOptionY =
+      optionCount > 0 ? Math.max(...optionItems.map((item) => item.y)) : null;
 
-    if (optionItems.length > 0) {
-      const lastOptionY = Math.max(...optionItems.map((item) => item.y));
+    if (optionCount >= 2 && lastOptionY !== null) {
       bottomY = lastOptionY + optionPadding;
       reason = "options";
     } else if (nextMarker) {
@@ -144,6 +148,15 @@ function computeQuestionCropBox({
       bottomY = pageBottom;
       reason = "last-question-page";
     }
+
+    if (!nextMarker && optionCount >= 2 && lastOptionY !== null) {
+      bottomY = lastOptionY + optionPadding;
+      reason = "last-question-options";
+    }
+    if (!nextMarker && optionCount < 2 && footerY !== null) {
+      bottomY = footerY - footerPadding;
+      reason = "last-question-footer";
+    }
   }
 
   if (footerY !== null) {
@@ -153,10 +166,16 @@ function computeQuestionCropBox({
     }
   }
 
+  const desiredBottom = topY + minHeight;
+  if (bottomY < desiredBottom) {
+    const maxBottom = footerY !== null ? footerY - footerPadding : pageBottom;
+    bottomY = Math.min(desiredBottom, maxBottom);
+  }
+
   let box = buildCropBox(viewportWidth, viewportHeight, topY, bottomY);
   let fallback = false;
 
-  if (box.height < minHeight || box.height <= 1) {
+  if (box.height < minHeight || box.height <= 1 || !marker) {
     const fallbackTop = PAGE_TOP_MARGIN;
     const fallbackBottom = footerY !== null ? footerY - footerPadding : pageBottom;
     box = buildCropBox(viewportWidth, viewportHeight, fallbackTop, fallbackBottom);

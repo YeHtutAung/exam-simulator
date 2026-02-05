@@ -103,7 +103,7 @@ export async function POST(_request: Request, { params }: Params) {
     ? draftQuestion.warnings
     : [];
   const nextWarnings = usedFallback
-    ? Array.from(new Set([...existingWarnings, "Stem image used full-page fallback crop."]))
+    ? Array.from(new Set([...existingWarnings, "CROP_FALLBACK_FULL_PAGE"]))
     : existingWarnings;
 
   await prisma.importDraftQuestion.update({

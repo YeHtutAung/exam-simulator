@@ -202,7 +202,7 @@ export async function processNextImportDraftOnce() {
             questionWarnings.push("Missing choices.");
           }
           if (stemFallbackMap.get(question.questionNo)) {
-            questionWarnings.push("Stem image used full-page fallback crop.");
+            questionWarnings.push("CROP_FALLBACK_FULL_PAGE");
           }
           if (!answers[question.questionNo]) {
             questionWarnings.push("Missing answer.");
