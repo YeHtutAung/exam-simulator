@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "vitest",
     "worker": "tsx src/scripts/importWorker.ts",
+    "crop:debug": "tsx src/scripts/cropStemDebug.ts",
     "postinstall": "prisma generate"
   },
   "prisma": {
@@ -22,6 +23,7 @@
     "next": "16.1.6",
     "pdfjs-dist": "^4.10.38",
     "pdf-parse": "^1.1.1",
+    "sharp": "^0.33.5",
     "pg": "^8.18.0",
     "prisma": "^7.3.0",
     "react": "19.2.3",

@@ -77,7 +77,7 @@ export function ImportDraftReviewPanel({ initial }: { initial: DraftResponse }) 
           <p className="text-sm font-semibold uppercase text-slate-500">Admin</p>
           <h1 className="text-2xl font-semibold">Import draft</h1>
           <p className="mt-1 text-sm text-slate-500">
-            {draft.title} · {draft.session} {draft.paper} · {draft.language}
+            {draft.title} - {draft.session} {draft.paper} - {draft.language}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -115,7 +115,7 @@ export function ImportDraftReviewPanel({ initial }: { initial: DraftResponse }) 
         <div className="rounded-2xl border border-sand-300 bg-white p-4">
           <p className="text-xs font-semibold uppercase text-slate-500">Issues</p>
           <p className="text-sm text-slate-600">
-            {warningCount} warnings · {errorCount} errors
+            {warningCount} warnings - {errorCount} errors
           </p>
         </div>
       </div>

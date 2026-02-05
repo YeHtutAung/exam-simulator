@@ -51,7 +51,7 @@ export default async function ImportDraftQuestionEditPage({
           <p className="text-sm font-semibold uppercase text-slate-500">Admin</p>
           <h1 className="text-2xl font-semibold">Edit question</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Q{question.questionNo} · {question.draft.title}
+            Q{question.questionNo} - {question.draft.title}
           </p>
         </div>
         <Link
@@ -71,6 +71,17 @@ export default async function ImportDraftQuestionEditPage({
           choices,
         }}
       />
+
+      {question.stemImageUrl && (
+        <div className="rounded-2xl border border-sand-300 bg-white p-4">
+          <p className="text-sm font-semibold text-slate-700">Stem image preview</p>
+          <img
+            src={question.stemImageUrl}
+            alt="Stem preview"
+            className="mt-3 w-full rounded-xl border border-sand-300"
+          />
+        </div>
+      )}
 
       {question.attachments.length > 0 && (
         <div className="rounded-2xl border border-sand-300 bg-white p-4">

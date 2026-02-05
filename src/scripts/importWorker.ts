@@ -7,6 +7,7 @@ import { prisma } from "../lib/prisma";
 import { parseFeAnswerPdf } from "../../lib/importer/feAnswerParser";
 import { parseFeQuestionPdf } from "../../lib/importer/feQuestionParser";
 import { renderPdfPagesToPng } from "../lib/importer/pdfPageRenderer";
+import { computeQuestionCrops, cropQuestionImages } from "../lib/importer/pdfQuestionCropper";
 
 const LOCK_TIMEOUT_MINUTES = 10;
 const POLL_INTERVAL_MS = 2000;
@@ -133,92 +134,137 @@ export async function processNextImportDraftOnce() {
     const questions = await parseFeQuestionPdf(questionPdf);
 
     await updateProgress(draftId, "RENDER_PAGES", 70);
-    const renderedPages = await renderPdfPagesToPng(
-      questionPdf,
-      path.join(
+    const pagesDir = path.join(
+      process.cwd(),
+      "public",
+      "uploads",
+      "imports",
+      draftId,
+      "pages"
+    );
+    const renderedPages = await renderPdfPagesToPng(questionPdf, pagesDir);
+    const pageMap = new Map(renderedPages.map((entry) => [entry.page, entry]));
+    const publicRoot = path.join(process.cwd(), "public");
+    const questionCrops = await computeQuestionCrops(questionPdf, 2);
+    const cropsByPage = new Map<number, typeof questionCrops>();
+    for (const crop of questionCrops) {
+      const list = cropsByPage.get(crop.page) ?? [];
+      list.push(crop);
+      cropsByPage.set(crop.page, list);
+    }
+
+    const stemImageMap = new Map<number, string>();
+    for (const [page, crops] of cropsByPage) {
+      const pagePath = path.join(pagesDir, `page-${page}.png`);
+      const outputDir = path.join(
         process.cwd(),
         "public",
         "uploads",
         "imports",
         draftId,
-        "pages"
-      )
-    );
-    const pageMap = new Map(renderedPages.map((entry) => [entry.page, entry]));
+        "questions"
+      );
+      const outputs = await cropQuestionImages({
+        pageImagePath: pagePath,
+        outputDir,
+        crops,
+        publicRoot,
+        debug: process.env.NODE_ENV === "development",
+      });
+      for (const output of outputs) {
+        stemImageMap.set(output.questionNo, output.url);
+      }
+    }
 
     await updateProgress(draftId, "SAVE_DRAFT", 90);
 
     const warnings: string[] = [];
 
-    await prisma.$transaction(async (tx) => {
-      await tx.importDraftQuestion.deleteMany({
-        where: { draftId },
-      });
-
-      for (const question of questions) {
-        const questionWarnings: string[] = [];
-        if (!question.stem) {
-          questionWarnings.push("Missing stem.");
-        }
-        if (!question.choices) {
-          questionWarnings.push("Missing choices.");
-        }
-        if (!answers[question.questionNo]) {
-          questionWarnings.push("Missing answer.");
-        }
-
-        if (questionWarnings.length > 0) {
-          warnings.push(`Q${question.questionNo}: ${questionWarnings.join(" ")}`);
-        }
-
-        const created = await tx.importDraftQuestion.create({
-          data: {
-            draftId,
-            questionNo: question.questionNo,
-            type: "MCQ_SINGLE",
-            stem: question.stem,
-            correctAnswer: answers[question.questionNo] ?? null,
-            sourcePage: question.sourcePage ? String(question.sourcePage) : null,
-            warnings: questionWarnings.length > 0 ? questionWarnings : undefined,
-          },
+    await prisma.$transaction(
+      async (tx) => {
+        await tx.importDraftQuestion.deleteMany({
+          where: { draftId },
         });
 
-        if (question.choices) {
-          const choiceEntries = [
-            { label: "a", text: question.choices.a, sortOrder: 1 },
-            { label: "b", text: question.choices.b, sortOrder: 2 },
-            { label: "c", text: question.choices.c, sortOrder: 3 },
-            { label: "d", text: question.choices.d, sortOrder: 4 },
-          ];
+        for (const question of questions) {
+          const questionWarnings: string[] = [];
+          const hasStemImage = stemImageMap.has(question.questionNo);
+          if (!question.stem && !hasStemImage) {
+            questionWarnings.push("Missing stem.");
+          }
+          if (!question.choices && !hasStemImage) {
+            questionWarnings.push("Missing choices.");
+          }
+          if (!answers[question.questionNo]) {
+            questionWarnings.push("Missing answer.");
+          }
 
-          await tx.importDraftChoice.createMany({
-            data: choiceEntries.map((choice) => ({
-              draftQuestionId: created.id,
-              label: choice.label,
-              text: choice.text,
-              sortOrder: choice.sortOrder,
-            })),
+          if (questionWarnings.length > 0) {
+            warnings.push(`Q${question.questionNo}: ${questionWarnings.join(" ")}`);
+          }
+
+          const created = await tx.importDraftQuestion.create({
+            data: {
+              draftId,
+              questionNo: question.questionNo,
+              type: "MCQ_SINGLE",
+              stem: question.stem,
+              correctAnswer: answers[question.questionNo] ?? null,
+              sourcePage: question.sourcePage ? String(question.sourcePage) : null,
+              stemImageUrl: stemImageMap.get(question.questionNo) ?? null,
+              warnings: questionWarnings.length > 0 ? questionWarnings : undefined,
+            },
           });
-        }
 
-        if (question.sourcePage) {
-          const pageInfo = pageMap.get(question.sourcePage);
-          if (pageInfo) {
-            await tx.importDraftAttachment.create({
-              data: {
+          const choiceEntries = question.choices
+            ? [
+                { label: "a", text: question.choices.a, sortOrder: 1 },
+                { label: "b", text: question.choices.b, sortOrder: 2 },
+                { label: "c", text: question.choices.c, sortOrder: 3 },
+                { label: "d", text: question.choices.d, sortOrder: 4 },
+              ]
+            : hasStemImage
+              ? [
+                  { label: "a", text: "", sortOrder: 1 },
+                  { label: "b", text: "", sortOrder: 2 },
+                  { label: "c", text: "", sortOrder: 3 },
+                  { label: "d", text: "", sortOrder: 4 },
+                ]
+              : [];
+
+          if (choiceEntries.length > 0) {
+            await tx.importDraftChoice.createMany({
+              data: choiceEntries.map((choice) => ({
                 draftQuestionId: created.id,
-                type: "IMAGE",
-                url: pageInfo.url,
-                caption: `Source page ${pageInfo.page}`,
-                width: pageInfo.width,
-                height: pageInfo.height,
-                sortOrder: 1,
-              },
+                label: choice.label,
+                text: choice.text,
+                sortOrder: choice.sortOrder,
+              })),
             });
           }
+
+          if (question.sourcePage) {
+            const pageInfo = pageMap.get(question.sourcePage);
+            if (pageInfo) {
+              await tx.importDraftAttachment.create({
+                data: {
+                  draftQuestionId: created.id,
+                  type: "IMAGE",
+                  url: pageInfo.url,
+                  caption: `Source page ${pageInfo.page}`,
+                  width: pageInfo.width,
+                  height: pageInfo.height,
+                  sortOrder: 1,
+                },
+              });
+            }
+          }
         }
+      },
+      {
+        timeout: 60000,
       }
-    });
+    );
 
     const status: DraftStatus =
       warnings.length > 0 ? "NEEDS_REVIEW" : "READY_TO_PUBLISH";

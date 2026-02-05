@@ -52,14 +52,14 @@ npm run worker
 ```
 
 ## Useful Commands
-- `npx prisma studio` — browse data
-- `npx prisma generate` — regenerate Prisma client
+- `npx prisma studio` - browse data
+- `npx prisma generate` - regenerate Prisma client
 
 ## Project Structure
-- `src/app` — routes (public + admin + API)
-- `src/components` — shared UI + admin forms
-- `src/lib` — Prisma client, validators, helpers
-- `prisma` — schema and seed
+- `src/app` - routes (public + admin + API)
+- `src/components` - shared UI + admin forms
+- `src/lib` - Prisma client, validators, helpers
+- `prisma` - schema and seed
 
 ## Environment
 The local database URL is set in `.env`:
@@ -109,6 +109,15 @@ Notes:
 - Rendered images are stored under `public/uploads/imports/{draftId}/pages/`.
 - Draft attachments are created as type `IMAGE` with a caption like `Source page N`.
 - When publishing, draft attachments are copied into the `Attachment` table and appear on the public question page.
+
+### Stem Image Cropping
+For FE imports, the worker can crop a per-question image and store it in `stemImageUrl`.
+The public question page will render the image when available and fall back to text otherwise.
+
+Debug crop script:
+```bash
+npm run crop:debug
+```
 
 ### Common failures
 - `ENOENT: no such file or directory, open '/mnt/data/...'`  

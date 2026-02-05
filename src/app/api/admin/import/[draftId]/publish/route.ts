@@ -62,7 +62,8 @@ export async function POST(_request: Request, { params }: Params) {
   }
 
   const invalidQuestions = draft.questions.filter((question) => {
-    if (!question.stem?.trim()) {
+    const hasStemImage = Boolean(question.stemImageUrl);
+    if (!hasStemImage && !question.stem?.trim()) {
       return true;
     }
     if (!question.correctAnswer) {
@@ -71,7 +72,10 @@ export async function POST(_request: Request, { params }: Params) {
     if (question.choices.length !== 4) {
       return true;
     }
-    return question.choices.some((choice) => !choice.text.trim());
+    if (!hasStemImage && question.choices.some((choice) => !choice.text.trim())) {
+      return true;
+    }
+    return false;
   });
 
   if (invalidQuestions.length > 0) {
@@ -101,6 +105,7 @@ export async function POST(_request: Request, { params }: Params) {
           questionNo: draftQuestion.questionNo,
           type: "MCQ_SINGLE",
           stem: draftQuestion.stem,
+          stemImageUrl: draftQuestion.stemImageUrl ?? null,
           correctAnswer: draftQuestion.correctAnswer ?? "a",
           explanation: null,
           sourcePage: draftQuestion.sourcePage,

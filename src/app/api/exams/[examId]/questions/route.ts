@@ -3,12 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { questionSchema } from "@/lib/validators/question";
 
 type RouteContext = {
-  params: { examId: string };
+  params: Promise<{ examId: string }>;
 };
 
 export async function GET(_: Request, context: RouteContext) {
+  const resolvedParams = await context.params;
   const questions = await prisma.question.findMany({
-    where: { examId: context.params.examId },
+    where: { examId: resolvedParams.examId },
     include: { choices: true, attachments: true },
     orderBy: { questionNo: "asc" },
   });
@@ -17,6 +18,7 @@ export async function GET(_: Request, context: RouteContext) {
 }
 
 export async function POST(request: Request, context: RouteContext) {
+  const resolvedParams = await context.params;
   const body = await request.json();
   const parsed = questionSchema.safeParse(body);
 
@@ -42,7 +44,7 @@ export async function POST(request: Request, context: RouteContext) {
 
   const question = await prisma.question.create({
     data: {
-      examId: context.params.examId,
+      examId: resolvedParams.examId,
       ...questionData,
       choices: choices && choices.length > 0 ? { create: choices } : undefined,
       attachments:

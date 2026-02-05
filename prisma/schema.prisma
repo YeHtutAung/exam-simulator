@@ -53,6 +53,7 @@ model Question {
   questionNo    Int
   type          QuestionType
   stem          String
+  stemImageUrl  String?
   correctAnswer String
   explanation   String?
   sourcePage    String?
@@ -132,6 +133,7 @@ model ImportDraftQuestion {
   questionNo     Int
   type           QuestionType  @default(MCQ_SINGLE)
   stem           String
+  stemImageUrl   String?
   correctAnswer  String?
   sourcePage     String?
   warnings       Json?

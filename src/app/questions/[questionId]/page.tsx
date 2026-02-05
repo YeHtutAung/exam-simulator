@@ -26,6 +26,8 @@ export default async function QuestionPage({ params }: QuestionPageProps) {
     );
   }
 
+  const hasStemImage = Boolean(question.stemImageUrl);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-2 text-xs uppercase text-slate-500">
@@ -37,6 +39,13 @@ export default async function QuestionPage({ params }: QuestionPageProps) {
       </div>
 
       <div className="rounded-3xl border border-sand-300 bg-white p-6 shadow-sm">
+        {hasStemImage && (
+          <img
+            src={question.stemImageUrl ?? undefined}
+            alt="Question"
+            className="w-full rounded-2xl border border-sand-300"
+          />
+        )}
 
         {question.attachments.length > 0 && (
           <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -72,16 +81,16 @@ export default async function QuestionPage({ params }: QuestionPageProps) {
           <div className="mt-6">
             <QuestionMCQInlinePractice
               questionId={question.id}
-              stem={question.stem}
+              stem={hasStemImage ? "" : question.stem}
               choices={question.choices.map((choice) => ({
                 label: choice.label as "a" | "b" | "c" | "d",
-                text: choice.text,
+                text: hasStemImage ? "" : choice.text,
               }))}
             />
           </div>
         )}
 
-        {question.type !== "MCQ_SINGLE" && (
+        {question.type !== "MCQ_SINGLE" && !hasStemImage && (
           <p className="whitespace-pre-line text-base leading-relaxed text-slate-800">
             {question.stem}
           </p>
