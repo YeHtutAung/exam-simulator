@@ -46,6 +46,11 @@ npm run dev
 
 Open `http://localhost:3000`.
 
+### 6) Start background import worker (Phase 2)
+```bash
+npm run worker
+```
+
 ## Useful Commands
 - `npx prisma studio` — browse data
 - `npx prisma generate` — regenerate Prisma client
@@ -95,6 +100,7 @@ npx vitest run
 /admin/import
 ```
 Upload question/answer PDFs, then review the draft at `/admin/import/[draftId]`. Fix issues in the per-question editor and publish when status is `READY_TO_PUBLISH`.
+Imports run asynchronously: the draft page polls status/progress until parsing finishes.
 
 ### Phase 2 Attachments MVP
 The import flow renders PDF pages to PNGs and attaches a page image to each question using its `sourcePage`.

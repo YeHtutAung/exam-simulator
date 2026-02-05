@@ -6,6 +6,7 @@ import { afterAll, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/prisma";
 import { GET } from "./[draftId]/route";
 import { POST } from "./route";
+import { processNextImportDraftOnce } from "@/scripts/importWorker";
 
 describe("POST /api/admin/import", () => {
   let draftId: string | null = null;
@@ -55,20 +56,26 @@ describe("POST /api/admin/import", () => {
       const payload = await response.json();
 
       expect(payload.draftId).toBeTruthy();
-      expect(["NEEDS_REVIEW", "READY_TO_PUBLISH"]).toContain(payload.status);
-
       draftId = payload.draftId as string;
 
-      const fetchResponse = await GET(
-        new Request(
-          `http://localhost/api/admin/import/${encodeURIComponent(draftId)}`
-        ),
-        { params: { draftId } }
-      );
+      let draft: any = null;
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        await processNextImportDraftOnce();
+        const fetchResponse = await GET(
+          new Request(
+            `http://localhost/api/admin/import/${encodeURIComponent(draftId)}`
+          ),
+          { params: { draftId } }
+        );
 
-      expect(fetchResponse.status).toBe(200);
-      const draft = await fetchResponse.json();
-      expect(draft.questions).toHaveLength(80);
+        expect(fetchResponse.status).toBe(200);
+        draft = await fetchResponse.json();
+        if (draft.status !== "PARSING") {
+          break;
+        }
+      }
+
+      expect(draft?.questions).toHaveLength(80);
       const withAttachments = draft.questions.filter(
         (question: { attachments?: unknown[] }) =>
           Array.isArray(question.attachments) && question.attachments.length > 0

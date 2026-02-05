@@ -105,6 +105,15 @@ model ImportDraft {
   paper            String
   language         String
   status           ImportDraftStatus @default(PARSING)
+  progressInt      Int               @default(0)
+  stage            String?
+  startedAt        DateTime?
+  finishedAt       DateTime?
+  jobLockedAt      DateTime?
+  jobLockedBy      String?
+  attempts         Int               @default(0)
+  questionPdfPath  String?
+  answerPdfPath    String?
   errors           Json?
   warnings         Json?
   publishedExamId  String?           @db.Uuid
@@ -113,6 +122,8 @@ model ImportDraft {
 
   publishedExam Exam? @relation(fields: [publishedExamId], references: [id])
   questions     ImportDraftQuestion[]
+
+  @@index([status, jobLockedAt])
 }
 
 model ImportDraftQuestion {
