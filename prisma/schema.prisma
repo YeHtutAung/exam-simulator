@@ -26,6 +26,13 @@ enum AttachmentType {
   OTHER
 }
 
+enum ImportDraftStatus {
+  DRAFT
+  READY
+  PUBLISHED
+  ERROR
+}
+
 model Exam {
   id        String     @id @default(uuid()) @db.Uuid
   code      String?    @unique
@@ -35,7 +42,8 @@ model Exam {
   language  String
   createdAt DateTime   @default(now())
 
-  questions Question[]
+  questions    Question[]
+  importDrafts ImportDraft[]
 }
 
 model Question {
@@ -87,4 +95,70 @@ model Attachment {
   question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@index([questionId])
+}
+
+model ImportDraft {
+  id               String            @id @default(uuid()) @db.Uuid
+  title            String
+  session          String
+  paper            String
+  language         String
+  status           ImportDraftStatus @default(DRAFT)
+  errors           Json?
+  warnings         Json?
+  publishedExamId  String?           @db.Uuid
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  publishedExam Exam? @relation(fields: [publishedExamId], references: [id])
+  questions     ImportDraftQuestion[]
+}
+
+model ImportDraftQuestion {
+  id             String        @id @default(uuid()) @db.Uuid
+  draftId        String        @db.Uuid
+  questionNo     Int
+  type           QuestionType  @default(MCQ_SINGLE)
+  stem           String
+  correctAnswer  String?
+  sourcePage     String?
+  warnings       Json?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  draft       ImportDraft            @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  choices     ImportDraftChoice[]
+  attachments ImportDraftAttachment[]
+
+  @@unique([draftId, questionNo])
+  @@index([draftId, questionNo])
+}
+
+model ImportDraftChoice {
+  id              String              @id @default(uuid()) @db.Uuid
+  draftQuestionId String              @db.Uuid
+  label           String
+  text            String
+  sortOrder       Int
+
+  draftQuestion ImportDraftQuestion @relation(fields: [draftQuestionId], references: [id], onDelete: Cascade)
+
+  @@unique([draftQuestionId, label])
+  @@index([draftQuestionId])
+}
+
+model ImportDraftAttachment {
+  id              String              @id @default(uuid()) @db.Uuid
+  draftQuestionId String              @db.Uuid
+  type            AttachmentType
+  url             String
+  caption         String?
+  width           Int?
+  height          Int?
+  sortOrder       Int
+  createdAt       DateTime            @default(now())
+
+  draftQuestion ImportDraftQuestion @relation(fields: [draftQuestionId], references: [id], onDelete: Cascade)
+
+  @@index([draftQuestionId])
 }
