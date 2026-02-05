@@ -154,6 +154,7 @@ export async function processNextImportDraftOnce() {
     }
 
     const stemImageMap = new Map<number, string>();
+    const stemFallbackMap = new Map<number, boolean>();
     for (const [page, crops] of cropsByPage) {
       const pagePath = path.join(pagesDir, `page-${page}.png`);
       const outputDir = path.join(
@@ -173,6 +174,11 @@ export async function processNextImportDraftOnce() {
       });
       for (const output of outputs) {
         stemImageMap.set(output.questionNo, output.url);
+        const fallback = crops.find((crop) => crop.questionNo === output.questionNo)
+          ?.fallback;
+        if (fallback) {
+          stemFallbackMap.set(output.questionNo, true);
+        }
       }
     }
 
@@ -194,6 +200,9 @@ export async function processNextImportDraftOnce() {
           }
           if (!question.choices && !hasStemImage) {
             questionWarnings.push("Missing choices.");
+          }
+          if (stemFallbackMap.get(question.questionNo)) {
+            questionWarnings.push("Stem image used full-page fallback crop.");
           }
           if (!answers[question.questionNo]) {
             questionWarnings.push("Missing answer.");

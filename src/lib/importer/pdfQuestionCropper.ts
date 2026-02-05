@@ -19,14 +19,16 @@ export type QuestionCrop = {
   questionNo: number;
   page: number;
   box: CropBox;
+  fallback?: boolean;
 };
 
 const QUESTION_REGEX = /\bQ\s*(\d+)\./i;
 
-const MARGIN_TOP = 6;
-const MARGIN_BOTTOM = 8;
+const MARGIN_TOP = 12;
+const MARGIN_BOTTOM = 14;
 const MARGIN_X = 12;
-const FOOTER_MARGIN = 24;
+const FOOTER_MARGIN = 30;
+const MIN_CROP_HEIGHT = 80;
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(value, max));
@@ -55,6 +57,26 @@ function findQuestionMarkers(items: any[], viewportHeight: number): Marker[] {
   return markers.sort((a, b) => a.y - b.y);
 }
 
+function buildCropBox(
+  viewportWidth: number,
+  viewportHeight: number,
+  top: number,
+  bottom: number
+): CropBox {
+  const clampedTop = clamp(top, 0, viewportHeight);
+  const clampedBottom = clamp(bottom, 0, viewportHeight);
+  const height = Math.max(1, clampedBottom - clampedTop);
+  const x = clamp(MARGIN_X, 0, viewportWidth);
+  const width = Math.max(1, viewportWidth - MARGIN_X * 2);
+
+  return {
+    x,
+    y: clampedTop,
+    width: Math.min(width, viewportWidth - x),
+    height: Math.min(height, viewportHeight - clampedTop),
+  };
+}
+
 export async function computeQuestionCrops(
   buffer: Buffer,
   scale: number
@@ -73,20 +95,24 @@ export async function computeQuestionCrops(
     for (let i = 0; i < markers.length; i += 1) {
       const marker = markers[i];
       const nextMarker = markers[i + 1];
-      const top = clamp(marker.y - MARGIN_TOP, 0, viewport.height);
-      const bottom = clamp(
-        (nextMarker ? nextMarker.y : viewport.height - FOOTER_MARGIN) - MARGIN_BOTTOM,
-        0,
-        viewport.height
-      );
-      const height = Math.max(1, bottom - top);
-      const x = clamp(MARGIN_X, 0, viewport.width);
-      const width = Math.max(1, viewport.width - MARGIN_X * 2);
+      const top = marker.y - MARGIN_TOP;
+      const bottom =
+        (nextMarker ? nextMarker.y : viewport.height - FOOTER_MARGIN) + MARGIN_BOTTOM;
+
+      let box = buildCropBox(viewport.width, viewport.height, top, bottom);
+      let fallback = false;
+      if (box.height < MIN_CROP_HEIGHT) {
+        const fullTop = clamp(marker.y - MARGIN_TOP, 0, viewport.height);
+        const fullBottom = clamp(viewport.height - FOOTER_MARGIN, 0, viewport.height);
+        box = buildCropBox(viewport.width, viewport.height, fullTop, fullBottom);
+        fallback = true;
+      }
 
       crops.push({
         questionNo: marker.questionNo,
         page: pageNum,
-        box: { x, y: top, width, height },
+        box,
+        fallback,
       });
     }
   }

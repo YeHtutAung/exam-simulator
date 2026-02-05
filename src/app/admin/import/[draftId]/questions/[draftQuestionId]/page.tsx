@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ImportDraftQuestionForm } from "@/components/admin/ImportDraftQuestionForm";
+import { RecropButton } from "@/components/admin/RecropButton";
 
 export default async function ImportDraftQuestionEditPage({
   params,
@@ -80,6 +81,12 @@ export default async function ImportDraftQuestionEditPage({
             alt="Stem preview"
             className="mt-3 w-full rounded-xl border border-sand-300"
           />
+          <div className="mt-3">
+            <RecropButton
+              draftId={resolvedParams.draftId}
+              questionId={question.id}
+            />
+          </div>
         </div>
       )}
 

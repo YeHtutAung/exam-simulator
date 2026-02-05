@@ -2,12 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { PublishDraftButton } from "@/components/admin/PublishDraftButton";
 
 type DraftQuestion = {
   id: string;
   questionNo: number;
   stem: string;
+  stemImageUrl?: string | null;
   correctAnswer: string | null;
   warnings: unknown;
   attachments: Array<{ id: string; url: string }>;
@@ -150,6 +152,7 @@ export function ImportDraftReviewPanel({ initial }: { initial: DraftResponse }) 
           <thead className="bg-sand-100 text-xs uppercase text-slate-500">
             <tr>
               <th className="px-4 py-3">No.</th>
+              <th className="px-4 py-3">Preview</th>
               <th className="px-4 py-3">Stem</th>
               <th className="px-4 py-3">Answer</th>
               <th className="px-4 py-3">Warnings</th>
@@ -164,6 +167,21 @@ export function ImportDraftReviewPanel({ initial }: { initial: DraftResponse }) 
               return (
                 <tr key={question.id} className="border-t border-sand-200">
                   <td className="px-4 py-3 font-semibold">{question.questionNo}</td>
+                  <td className="px-4 py-3">
+                    {question.stemImageUrl ? (
+                      <Image
+                        src={question.stemImageUrl}
+                        alt={`Q${question.questionNo}`}
+                        width={80}
+                        height={100}
+                        sizes="80px"
+                        className="h-auto w-20 rounded border border-sand-300 object-contain"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <span className="text-xs text-slate-400">-</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-slate-700">
                     {stemPreview(question.stem)}
                   </td>
@@ -183,10 +201,7 @@ export function ImportDraftReviewPanel({ initial }: { initial: DraftResponse }) 
             })}
             {draft.questions.length === 0 && (
               <tr>
-                <td
-                  colSpan={6}
-                  className="px-4 py-6 text-center text-sm text-slate-500"
-                >
+                <td colSpan={7} className="px-4 py-6 text-center text-sm text-slate-500">
                   {draft.status === "PARSING"
                     ? "Import in progress..."
                     : "No questions available."}

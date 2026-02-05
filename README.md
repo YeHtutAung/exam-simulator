@@ -119,6 +119,8 @@ Debug crop script:
 npm run crop:debug
 ```
 
+If a crop looks off, use the admin question editor and click "Re-crop image" to regenerate the stem image for that question.
+
 ### Common failures
 - `ENOENT: no such file or directory, open '/mnt/data/...'`  
   The test fixtures are missing. Copy PDFs to `/mnt/data` (or `C:\mnt\data` on Windows).
