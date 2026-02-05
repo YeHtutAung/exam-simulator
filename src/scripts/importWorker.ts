@@ -154,162 +154,109 @@ export async function processNextImportDraftOnce() {
     await updateProgress(draftId, "SAVE_DRAFT", 90);
 
     const warnings: string[] = [];
-    const preparedQuestions: Array<{
-      questionNo: number;
-      stem: string;
-      correctAnswer: string | null;
-      sourcePage: string | null;
-      warnings: string[] | undefined;
-      choices: Array<{ label: string; text: string; sortOrder: number }>;
-      attachments: Array<{
-        type: "IMAGE";
-        url: string;
-        caption: string;
-        width: number;
-        height: number;
-        sortOrder: number;
-      }>;
-    }> = [];
 
-    for (const question of questions) {
-      const questionWarnings: string[] = [];
-      if (!question.stem) {
-        questionWarnings.push("Missing stem.");
-      }
-      if (!question.choices) {
-        questionWarnings.push("Missing choices.");
-      }
-      if (!answers[question.questionNo]) {
-        questionWarnings.push("Missing answer.");
-      }
+    await prisma.$transaction(async (tx) => {
+      await tx.importDraftQuestion.deleteMany({
+        where: { draftId },
+      });
 
-      if (questionWarnings.length > 0) {
-        warnings.push(`Q${question.questionNo}: ${questionWarnings.join(" ")}`);
-      }
+      for (const question of questions) {
+        const questionWarnings: string[] = [];
+        if (!question.stem) {
+          questionWarnings.push("Missing stem.");
+        }
+        if (!question.choices) {
+          questionWarnings.push("Missing choices.");
+        }
+        if (!answers[question.questionNo]) {
+          questionWarnings.push("Missing answer.");
+        }
 
-      const choices = question.choices
-        ? [
+        if (questionWarnings.length > 0) {
+          warnings.push(`Q${question.questionNo}: ${questionWarnings.join(" ")}`);
+        }
+
+        const created = await tx.importDraftQuestion.create({
+          data: {
+            draftId,
+            questionNo: question.questionNo,
+            type: "MCQ_SINGLE",
+            stem: question.stem,
+            correctAnswer: answers[question.questionNo] ?? null,
+            sourcePage: question.sourcePage ? String(question.sourcePage) : null,
+            warnings: questionWarnings.length > 0 ? questionWarnings : undefined,
+          },
+        });
+
+        if (question.choices) {
+          const choiceEntries = [
             { label: "a", text: question.choices.a, sortOrder: 1 },
             { label: "b", text: question.choices.b, sortOrder: 2 },
             { label: "c", text: question.choices.c, sortOrder: 3 },
             { label: "d", text: question.choices.d, sortOrder: 4 },
-          ]
-        : [];
+          ];
 
-      const attachments: Array<{
-        type: "IMAGE";
-        url: string;
-        caption: string;
-        width: number;
-        height: number;
-        sortOrder: number;
-      }> = [];
+          await tx.importDraftChoice.createMany({
+            data: choiceEntries.map((choice) => ({
+              draftQuestionId: created.id,
+              label: choice.label,
+              text: choice.text,
+              sortOrder: choice.sortOrder,
+            })),
+          });
+        }
 
-      const crop = cropMap.get(question.questionNo);
-      if (crop) {
-        const pageInfo = pageMap.get(crop.page);
-        if (pageInfo) {
-          const outputDir = path.join(
-            process.cwd(),
-            "public",
-            "uploads",
-            "imports",
-            draftId,
-            "questions",
-            `q-${question.questionNo}`
-          );
-          const outputs = await cropQuestionImagesFromPage(
-            path.join(pagesDir, `page-${crop.page}.png`),
-            outputDir,
-            crop
-          );
-          for (const output of outputs) {
-            let urlPath = output.filePath
-              .replace(publicRoot, "")
-              .split(path.sep)
-              .join("/");
-            if (!urlPath.startsWith("/")) {
-              urlPath = `/${urlPath}`;
+        const crop = cropMap.get(question.questionNo);
+        if (crop) {
+          const pageInfo = pageMap.get(crop.page);
+          if (pageInfo) {
+            const outputDir = path.join(
+              process.cwd(),
+              "public",
+              "uploads",
+              "imports",
+              draftId,
+              "questions",
+              `q-${question.questionNo}`
+            );
+            const outputs = await cropQuestionImagesFromPage(
+              path.join(pagesDir, `page-${crop.page}.png`),
+              outputDir,
+              crop
+            );
+            for (const output of outputs) {
+              let urlPath = output.filePath
+                .replace(publicRoot, "")
+                .split(path.sep)
+                .join("/");
+              if (!urlPath.startsWith("/")) {
+                urlPath = `/${urlPath}`;
+              }
+              await tx.importDraftAttachment.create({
+                data: {
+                  draftQuestionId: created.id,
+                  type: "IMAGE",
+                  url: urlPath,
+                  caption: output.role,
+                  width: output.width,
+                  height: output.height,
+                  sortOrder:
+                    output.role === "STEM"
+                      ? 1
+                      : output.role === "CHOICE_A"
+                        ? 2
+                        : output.role === "CHOICE_B"
+                          ? 3
+                          : output.role === "CHOICE_C"
+                            ? 4
+                            : 5,
+                },
+              });
             }
-            attachments.push({
-              type: "IMAGE",
-              url: urlPath,
-              caption: output.role,
-              width: output.width,
-              height: output.height,
-              sortOrder:
-                output.role === "STEM"
-                  ? 1
-                  : output.role === "CHOICE_A"
-                    ? 2
-                    : output.role === "CHOICE_B"
-                      ? 3
-                      : output.role === "CHOICE_C"
-                        ? 4
-                        : 5,
-            });
           }
         }
       }
-
-      preparedQuestions.push({
-        questionNo: question.questionNo,
-        stem: question.stem,
-        correctAnswer: answers[question.questionNo] ?? null,
-        sourcePage: question.sourcePage ? String(question.sourcePage) : null,
-        warnings: questionWarnings.length > 0 ? questionWarnings : undefined,
-        choices,
-        attachments,
-      });
-    }
-
-    await prisma.$transaction(
-      async (tx) => {
-        await tx.importDraftQuestion.deleteMany({
-          where: { draftId },
-        });
-
-        for (const entry of preparedQuestions) {
-          const created = await tx.importDraftQuestion.create({
-            data: {
-              draftId,
-              questionNo: entry.questionNo,
-              type: "MCQ_SINGLE",
-              stem: entry.stem,
-              correctAnswer: entry.correctAnswer,
-              sourcePage: entry.sourcePage,
-              warnings: entry.warnings,
-            },
-          });
-
-          if (entry.choices.length > 0) {
-            await tx.importDraftChoice.createMany({
-              data: entry.choices.map((choice) => ({
-                draftQuestionId: created.id,
-                label: choice.label,
-                text: choice.text,
-                sortOrder: choice.sortOrder,
-              })),
-            });
-          }
-
-          if (entry.attachments.length > 0) {
-            await tx.importDraftAttachment.createMany({
-              data: entry.attachments.map((attachment) => ({
-                draftQuestionId: created.id,
-                type: attachment.type,
-                url: attachment.url,
-                caption: attachment.caption,
-                width: attachment.width,
-                height: attachment.height,
-                sortOrder: attachment.sortOrder,
-              })),
-            });
-          }
-        }
-      },
-      { timeout: 20000 }
-    );
+    });
 
     const status: DraftStatus =
       warnings.length > 0 ? "NEEDS_REVIEW" : "READY_TO_PUBLISH";
