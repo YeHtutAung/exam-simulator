@@ -3,12 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { examSchema } from "@/lib/validators/exam";
 
 type RouteContext = {
-  params: { examId: string };
+  params: Promise<{ examId: string }>;
 };
 
 export async function GET(_: Request, context: RouteContext) {
+  const resolvedParams = await context.params;
   const exam = await prisma.exam.findUnique({
-    where: { id: context.params.examId },
+    where: { id: resolvedParams.examId },
   });
 
   if (!exam) {
@@ -19,6 +20,7 @@ export async function GET(_: Request, context: RouteContext) {
 }
 
 export async function PUT(request: Request, context: RouteContext) {
+  const resolvedParams = await context.params;
   const body = await request.json();
   const parsed = examSchema.safeParse(body);
 
@@ -28,7 +30,7 @@ export async function PUT(request: Request, context: RouteContext) {
 
   try {
     const exam = await prisma.exam.update({
-      where: { id: context.params.examId },
+      where: { id: resolvedParams.examId },
       data: {
         ...parsed.data,
         code: parsed.data.code?.trim() || null,
@@ -41,8 +43,9 @@ export async function PUT(request: Request, context: RouteContext) {
 }
 
 export async function DELETE(_: Request, context: RouteContext) {
+  const resolvedParams = await context.params;
   try {
-    await prisma.exam.delete({ where: { id: context.params.examId } });
+    await prisma.exam.delete({ where: { id: resolvedParams.examId } });
     return NextResponse.json({ ok: true });
   } catch (error) {
     return NextResponse.json({ error: "Failed to delete exam." }, { status: 400 });
