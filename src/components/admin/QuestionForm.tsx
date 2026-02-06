@@ -68,6 +68,8 @@ export function QuestionForm({
   });
 
   const type = watch("type");
+  const stemImageUrl = watch("stemImageUrl");
+  const hasStemImage = Boolean(stemImageUrl);
 
   const onSubmit = async (values: QuestionInput) => {
     setError(null);
@@ -123,15 +125,21 @@ export function QuestionForm({
             <option value="TEXT">TEXT</option>
           </select>
         </label>
-        <label className="space-y-1 text-sm md:col-span-2">
-          <span className="font-medium">Stem</span>
-          <textarea
-            {...register("stem")}
-            rows={5}
-            className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
-          />
-          {errors.stem && <span className="text-xs text-red-600">{errors.stem.message}</span>}
-        </label>
+        {hasStemImage ? (
+          <input type="hidden" {...register("stem")} />
+        ) : (
+          <label className="space-y-1 text-sm md:col-span-2">
+            <span className="font-medium">Stem</span>
+            <textarea
+              {...register("stem")}
+              rows={5}
+              className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
+            />
+            {errors.stem && (
+              <span className="text-xs text-red-600">{errors.stem.message}</span>
+            )}
+          </label>
+        )}
         <label className="space-y-1 text-sm">
           <span className="font-medium">Correct Answer</span>
           <input
@@ -161,7 +169,7 @@ export function QuestionForm({
         </label>
       </div>
 
-      {type === "MCQ_SINGLE" && (
+      {type === "MCQ_SINGLE" && !hasStemImage && (
         <section className="space-y-3 rounded-2xl border border-sand-300 bg-white p-4">
           <h3 className="text-sm font-semibold text-slate-700">Choices</h3>
           {choicesDefaults.map((choice, index) => (
@@ -188,6 +196,25 @@ export function QuestionForm({
             </label>
           ))}
         </section>
+      )}
+      {type === "MCQ_SINGLE" && hasStemImage && (
+        <div className="hidden">
+          {choicesDefaults.map((choice, index) => (
+            <div key={choice.label}>
+              <input type="hidden" {...register(`choices.${index}.text`)} />
+              <input
+                type="hidden"
+                {...register(`choices.${index}.label`)}
+                value={choice.label}
+              />
+              <input
+                type="hidden"
+                {...register(`choices.${index}.sortOrder`)}
+                value={choice.sortOrder}
+              />
+            </div>
+          ))}
+        </div>
       )}
 
       <section className="space-y-3 rounded-2xl border border-sand-300 bg-white p-4">
