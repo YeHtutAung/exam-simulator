@@ -71,6 +71,10 @@ export function ImportDraftReviewPanel({ initial }: { initial: DraftResponse }) 
   );
   const errorCount = errors.length;
   const warningCount = warnings.length;
+  const missingCrops = useMemo(
+    () => draft.questions.filter((question) => !question.stemImageUrl).length,
+    [draft.questions]
+  );
 
   return (
     <div className="space-y-6">
@@ -94,7 +98,7 @@ export function ImportDraftReviewPanel({ initial }: { initial: DraftResponse }) 
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <div className="rounded-2xl border border-sand-300 bg-white p-4">
           <p className="text-xs font-semibold uppercase text-slate-500">Status</p>
           <p className="text-lg font-semibold">{draft.status}</p>
@@ -113,6 +117,10 @@ export function ImportDraftReviewPanel({ initial }: { initial: DraftResponse }) 
         <div className="rounded-2xl border border-sand-300 bg-white p-4">
           <p className="text-xs font-semibold uppercase text-slate-500">Questions</p>
           <p className="text-lg font-semibold">{draft.questions.length}</p>
+        </div>
+        <div className="rounded-2xl border border-sand-300 bg-white p-4">
+          <p className="text-xs font-semibold uppercase text-slate-500">Missing crops</p>
+          <p className="text-lg font-semibold">{missingCrops}</p>
         </div>
         <div className="rounded-2xl border border-sand-300 bg-white p-4">
           <p className="text-xs font-semibold uppercase text-slate-500">Issues</p>

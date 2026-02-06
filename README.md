@@ -102,6 +102,11 @@ npx vitest run
 Upload question/answer PDFs, then review the draft at `/admin/import/[draftId]`. Fix issues in the per-question editor and publish when status is `READY_TO_PUBLISH`.
 Imports run asynchronously: the draft page polls status/progress until parsing finishes.
 
+Recommended workflow:
+1. Import PDFs.
+2. Batch crop stems in the draft question list (open each question and adjust the crop).
+3. Publish once the missing crops counter is 0 and warnings are cleared.
+
 ### Phase 2 Attachments MVP
 The import flow renders PDF pages to PNGs and attaches a page image to each question using its `sourcePage`.
 

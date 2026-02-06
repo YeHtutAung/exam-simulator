@@ -11,6 +11,13 @@ type Params = {
   }>;
 };
 
+const MIN_WIDTH = 150;
+const MIN_HEIGHT = 80;
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
 function toFilePath(publicRoot: string, url: string) {
   const normalized = url.replace(/^\/+/, "");
   return path.join(publicRoot, normalized);
@@ -27,8 +34,16 @@ export async function POST(request: Request, { params }: Params) {
   if (![x, y, width, height].every((value) => Number.isFinite(value))) {
     return NextResponse.json({ error: "Invalid crop payload." }, { status: 400 });
   }
-  if (width <= 0 || height <= 0) {
-    return NextResponse.json({ error: "Crop dimensions must be positive." }, { status: 400 });
+  if (![x, y, width, height].every((value) => Number.isInteger(value))) {
+    return NextResponse.json({ error: "Crop values must be integers." }, { status: 400 });
+  }
+  if (width < MIN_WIDTH || height < MIN_HEIGHT) {
+    return NextResponse.json(
+      {
+        error: `Crop must be at least ${MIN_WIDTH}x${MIN_HEIGHT} pixels.`,
+      },
+      { status: 400 }
+    );
   }
 
   const draftQuestion = await prisma.importDraftQuestion.findFirst({
@@ -67,21 +82,18 @@ export async function POST(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Page image metadata missing." }, { status: 500 });
   }
 
-  const left = Math.round(x);
-  const top = Math.round(y);
-  const cropWidth = Math.round(width);
-  const cropHeight = Math.round(height);
+  const left = clamp(x, 0, Math.max(0, imageWidth - 1));
+  const top = clamp(y, 0, Math.max(0, imageHeight - 1));
+  const right = clamp(x + width, left + 1, imageWidth);
+  const bottom = clamp(y + height, top + 1, imageHeight);
+  const cropWidth = right - left;
+  const cropHeight = bottom - top;
 
-  const withinBounds =
-    left >= 0 &&
-    top >= 0 &&
-    cropWidth > 0 &&
-    cropHeight > 0 &&
-    left + cropWidth <= imageWidth &&
-    top + cropHeight <= imageHeight;
-
-  if (!withinBounds) {
-    return NextResponse.json({ error: "Crop bounds are outside the page image." }, { status: 400 });
+  if (cropWidth < MIN_WIDTH || cropHeight < MIN_HEIGHT) {
+    return NextResponse.json(
+      { error: "Crop area is too small or outside the page image." },
+      { status: 400 }
+    );
   }
 
   const outputDir = path.join(
@@ -109,7 +121,7 @@ export async function POST(request: Request, { params }: Params) {
     urlPath = `/${urlPath}`;
   }
 
-  await prisma.importDraftQuestion.update({
+  const updated = await prisma.importDraftQuestion.update({
     where: { id: draftQuestion.id },
     data: {
       stemImageUrl: urlPath,
@@ -119,7 +131,15 @@ export async function POST(request: Request, { params }: Params) {
       cropH: cropHeight,
       cropScale: draftQuestion.cropScale ?? null,
     },
+    select: {
+      id: true,
+      stemImageUrl: true,
+      cropX: true,
+      cropY: true,
+      cropW: true,
+      cropH: true,
+    },
   });
 
-  return NextResponse.json({ stemImageUrl: urlPath });
+  return NextResponse.json(updated);
 }

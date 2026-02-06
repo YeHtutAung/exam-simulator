@@ -38,6 +38,18 @@ export default async function ImportDraftQuestionEditPage({
     );
   }
 
+  const siblings = await prisma.importDraftQuestion.findMany({
+    where: { draftId: resolvedParams.draftId },
+    orderBy: { questionNo: "asc" },
+    select: { id: true },
+  });
+  const currentIndex = siblings.findIndex((entry) => entry.id === question.id);
+  const prevQuestionId = currentIndex > 0 ? siblings[currentIndex - 1]?.id : null;
+  const nextQuestionId =
+    currentIndex >= 0 && currentIndex < siblings.length - 1
+      ? siblings[currentIndex + 1]?.id
+      : null;
+
   const choices = question.choices.reduce(
     (acc, choice) => {
       acc[choice.label as "a" | "b" | "c" | "d"] = choice.text;
@@ -79,6 +91,7 @@ export default async function ImportDraftQuestionEditPage({
           draftId={resolvedParams.draftId}
           questionId={question.id}
           pageImageUrl={question.pageImageUrl}
+          stemImageUrl={question.stemImageUrl}
           initialCrop={
             question.cropX !== null &&
             question.cropY !== null &&
@@ -92,6 +105,8 @@ export default async function ImportDraftQuestionEditPage({
                 }
               : null
           }
+          prevQuestionId={prevQuestionId}
+          nextQuestionId={nextQuestionId}
         />
       )}
 

@@ -55,14 +55,20 @@ type ImportDraftQuestionCropperProps = {
   draftId: string;
   questionId: string;
   pageImageUrl: string;
+  stemImageUrl?: string | null;
   initialCrop?: CropBox | null;
+  prevQuestionId?: string | null;
+  nextQuestionId?: string | null;
 };
 
 export function ImportDraftQuestionCropper({
   draftId,
   questionId,
   pageImageUrl,
+  stemImageUrl,
   initialCrop,
+  prevQuestionId,
+  nextQuestionId,
 }: ImportDraftQuestionCropperProps) {
   const router = useRouter();
   const imageRef = useRef<HTMLImageElement | null>(null);
@@ -316,10 +322,10 @@ export function ImportDraftQuestionCropper({
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = async (): Promise<boolean> => {
     if (!crop) {
       setError("Select a crop area first.");
-      return;
+      return false;
     }
     setIsSaving(true);
     setError(null);
@@ -343,13 +349,24 @@ export function ImportDraftQuestionCropper({
       if (!response.ok) {
         const payload = await response.json().catch(() => null);
         setError(payload?.error ?? "Failed to save crop.");
-        return;
+        return false;
       }
 
       setStatus("Crop saved.");
       router.refresh();
+      return true;
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSaveAndNext = async () => {
+    if (!nextQuestionId) {
+      return;
+    }
+    const saved = await handleSave();
+    if (saved) {
+      router.push(`/admin/import/${draftId}/questions/${nextQuestionId}`);
     }
   };
 
@@ -361,8 +378,35 @@ export function ImportDraftQuestionCropper({
           <p className="text-xs text-slate-500">
             Drag to select. Arrow keys move, Shift + arrows resize, Enter saves.
           </p>
+          <p className="mt-1 text-xs text-slate-500">
+            {stemImageUrl ? (
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-700">
+                Cropped
+              </span>
+            ) : (
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-700">
+                Not cropped
+              </span>
+            )}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => prevQuestionId && router.push(`/admin/import/${draftId}/questions/${prevQuestionId}`)}
+            disabled={!prevQuestionId}
+            className="rounded-full border border-sand-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 disabled:opacity-60"
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            onClick={() => nextQuestionId && router.push(`/admin/import/${draftId}/questions/${nextQuestionId}`)}
+            disabled={!nextQuestionId}
+            className="rounded-full border border-sand-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 disabled:opacity-60"
+          >
+            Next
+          </button>
           <button
             type="button"
             onClick={handleReset}
@@ -385,6 +429,14 @@ export function ImportDraftQuestionCropper({
             className="rounded-full bg-accent px-4 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSaving ? "Saving..." : "Save crop"}
+          </button>
+          <button
+            type="button"
+            onClick={handleSaveAndNext}
+            disabled={!crop || isSaving || !nextQuestionId}
+            className="rounded-full bg-accent-strong px-4 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Save & Next
           </button>
         </div>
       </div>
@@ -443,11 +495,16 @@ export function ImportDraftQuestionCropper({
               <p className="text-xs text-slate-500">Select a crop area to preview.</p>
             )}
           </div>
-          {crop && (
-            <p className="mt-3 text-xs text-slate-600">
-              x {crop.x} · y {crop.y} · w {crop.width} · h {crop.height}
+          <div className="mt-3 text-xs text-slate-600">
+            <p>
+              Image: {imageSize.width} x {imageSize.height}
             </p>
-          )}
+            {crop && (
+              <p>
+                Crop: x {crop.x} · y {crop.y} · w {crop.width} · h {crop.height}
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>
