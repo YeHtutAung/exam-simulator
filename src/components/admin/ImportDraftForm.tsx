@@ -37,12 +37,18 @@ export function ImportDraftForm({ exams, defaultValues }: ImportDraftFormProps) 
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
+    watch,
   } = useForm<ImportDraftFormValues>({
     resolver: zodResolver(importDraftFormSchema),
     defaultValues: {
       examId: defaultValues?.examId ?? "",
     },
   });
+
+  const questionFile = watch("questionPdf");
+  const answerFile = watch("answerPdf");
+  const questionName = questionFile?.item(0)?.name ?? "";
+  const answerName = answerFile?.item(0)?.name ?? "";
 
   const onSubmit = async (values: ImportDraftFormValues) => {
     setError(null);
@@ -144,24 +150,92 @@ export function ImportDraftForm({ exams, defaultValues }: ImportDraftFormProps) 
             Question PDF
             <InfoTooltip text="Upload the official question PDF for this exam." />
           </span>
-          <input
-            type="file"
-            accept="application/pdf"
-            {...register("questionPdf")}
-            className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2 text-sm"
-          />
+          <span
+            className={`group relative flex min-h-[56px] cursor-pointer items-center gap-3 rounded-xl border bg-white px-4 py-3 text-sm transition ${
+              questionName
+                ? "border-emerald-300 bg-emerald-50/40"
+                : "border-sand-400 hover:border-sand-500 hover:bg-sand-50"
+            } focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20`}
+          >
+            <span
+              className={`flex h-9 w-9 items-center justify-center rounded-full ${
+                questionName ? "bg-emerald-100 text-emerald-700" : "bg-sand-100 text-slate-500"
+              }`}
+            >
+              {questionName ? (
+                <span className="text-xs font-semibold">✓</span>
+              ) : (
+                <svg viewBox="0 0 20 20" className="h-4 w-4" aria-hidden="true">
+                  <path
+                    d="M10 3v9m0 0l3-3m-3 3L7 9m-3 6h12"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )}
+            </span>
+            <span className="flex-1">
+              <span className="block font-medium text-slate-800">Upload Question PDF</span>
+              <span className="block text-xs text-slate-500">
+                {questionName || "PDF only"}
+              </span>
+            </span>
+            <input
+              type="file"
+              accept="application/pdf"
+              {...register("questionPdf")}
+              className="absolute inset-0 cursor-pointer opacity-0"
+            />
+          </span>
         </label>
         <label className="space-y-1 text-sm">
           <span className="flex items-baseline gap-2 font-medium">
             Answer PDF
             <InfoTooltip text="Upload the official answer PDF for this exam." />
           </span>
-          <input
-            type="file"
-            accept="application/pdf"
-            {...register("answerPdf")}
-            className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2 text-sm"
-          />
+          <span
+            className={`group relative flex min-h-[56px] cursor-pointer items-center gap-3 rounded-xl border bg-white px-4 py-3 text-sm transition ${
+              answerName
+                ? "border-emerald-300 bg-emerald-50/40"
+                : "border-sand-300 hover:border-sand-400 hover:bg-sand-50"
+            } focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20`}
+          >
+            <span
+              className={`flex h-9 w-9 items-center justify-center rounded-full ${
+                answerName ? "bg-emerald-100 text-emerald-700" : "bg-sand-100 text-slate-500"
+              }`}
+            >
+              {answerName ? (
+                <span className="text-xs font-semibold">✓</span>
+              ) : (
+                <svg viewBox="0 0 20 20" className="h-4 w-4" aria-hidden="true">
+                  <path
+                    d="M10 3v9m0 0l3-3m-3 3L7 9m-3 6h12"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )}
+            </span>
+            <span className="flex-1">
+              <span className="block font-medium text-slate-800">Upload Answer PDF</span>
+              <span className="block text-xs text-slate-500">
+                {answerName || "PDF only"}
+              </span>
+            </span>
+            <input
+              type="file"
+              accept="application/pdf"
+              {...register("answerPdf")}
+              className="absolute inset-0 cursor-pointer opacity-0"
+            />
+          </span>
         </label>
       </div>
 
