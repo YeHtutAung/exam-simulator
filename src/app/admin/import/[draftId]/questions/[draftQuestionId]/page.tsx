@@ -1,4 +1,6 @@
 import Link from "next/link";
+
+export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/prisma";
 import { ImportDraftQuestionForm } from "@/components/admin/ImportDraftQuestionForm";
 import { RecropButton } from "@/components/admin/RecropButton";
