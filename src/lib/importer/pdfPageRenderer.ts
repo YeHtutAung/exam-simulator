@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { createCanvas } from "@napi-rs/canvas";
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
+import { configurePdfJsWorker } from "@/lib/pdfjs";
 
 type RenderedPage = {
   page: number;
@@ -21,6 +22,7 @@ export async function renderPdfPagesToPng(
   scale = 2.5
 ): Promise<RenderedPage[]> {
   const publicRoot = path.join(process.cwd(), "public");
+  configurePdfJsWorker();
   await fs.mkdir(outDir, { recursive: true });
 
   const doc = await pdfjs

@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
+import { configurePdfJsWorker } from "@/lib/pdfjs";
 
 type Marker = {
   questionNo: number;
@@ -192,6 +193,7 @@ export async function computeQuestionCrops(
   buffer: Buffer,
   scale: number
 ): Promise<QuestionCrop[]> {
+  configurePdfJsWorker();
   const doc = await pdfjs
     .getDocument({ data: new Uint8Array(buffer), disableWorker: true })
     .promise;
