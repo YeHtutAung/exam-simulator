@@ -35,6 +35,7 @@ const BASE_INTER_PADDING = 16;
 const BASE_FOOTER_PADDING = 16;
 const BASE_SAFE_MARGIN = 12;
 const BASE_MIN_HEIGHT = 120;
+const BASE_OPTION_MIN_HEIGHT = 220;
 const PAGE_TOP_MARGIN = 8;
 
 function clamp(value: number, min: number, max: number) {
@@ -112,9 +113,11 @@ function computeQuestionCropBox({
   const footerPadding = BASE_FOOTER_PADDING * scale;
   const safeMargin = BASE_SAFE_MARGIN * scale;
   const minHeight = BASE_MIN_HEIGHT * (scale / 2);
+  const optionMinHeight = BASE_OPTION_MIN_HEIGHT * (scale / 2);
 
   const markerIndex = markers.findIndex((marker) => marker.questionNo === questionNo);
   const marker = markers[markerIndex];
+  const prevMarker = markerIndex > 0 ? markers[markerIndex - 1] : undefined;
   const candidateNext = markerIndex >= 0 ? markers[markerIndex + 1] : undefined;
   const nextMarker =
     marker && candidateNext && candidateNext.y > marker.y ? candidateNext : undefined;
@@ -165,6 +168,13 @@ function computeQuestionCropBox({
     if (reason !== "last-question-footer") {
       reason = `${reason}+footer-guard`;
     }
+  }
+
+  if (marker && bottomY - topY < optionMinHeight) {
+    const desiredTop = marker.y - optionMinHeight;
+    const minTop = prevMarker ? prevMarker.y + interPadding : PAGE_TOP_MARGIN;
+    topY = Math.max(desiredTop, minTop);
+    reason = `${reason}+expanded-top`;
   }
 
   const desiredBottom = topY + minHeight;

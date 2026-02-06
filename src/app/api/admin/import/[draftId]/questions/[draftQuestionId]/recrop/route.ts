@@ -36,7 +36,8 @@ export async function POST(_request: Request, { params }: Params) {
 
   const buffer = await fs.readFile(draftQuestion.draft.questionPdfPath);
   const renderScale = 2.5;
-  const crops = await computeQuestionCrops(buffer, renderScale);
+  const startPage = draftQuestion.draft.startPage ?? 1;
+  const crops = await computeQuestionCrops(buffer, renderScale, startPage);
   let crop = crops.find((entry) => entry.questionNo === questionNo);
   let usedFallback = false;
 
