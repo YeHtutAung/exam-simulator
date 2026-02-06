@@ -24,19 +24,33 @@ export type QuestionCrop = {
   reason?: string;
 };
 
-const QUESTION_REGEX = /\bQ\s*(\d+)\./i;
+// Match "Q1.", "Q1", "Q 1.", "Q 1" - dot is optional
+const QUESTION_REGEX = /\bQ\s*(\d+)\.?/i;
 const OPTION_REGEX = /^([a-d])\)/i;
 const FOOTER_REGEX = /^\s*-\s*\d+\s*-\s*$/;
 
 const MARGIN_X = 12;
-const BASE_TOP_PADDING = 8;
-const BASE_OPTION_PADDING = 20;
+// Increased from 8 to 20 to prevent question markers from being clipped
+const BASE_TOP_PADDING = 20;
+// Padding for horizontal options (a/b/c/d on same line)
+const BASE_OPTION_PADDING_HORIZONTAL = 50;
+// Padding for normal vertical options (one per line)
+const BASE_OPTION_PADDING_VERTICAL = 60;
+// Extra padding for multi-row graphical options (diagrams, trees, formulas)
+// Only used when options have large gaps indicating graphical content
+const BASE_OPTION_PADDING_GRAPHICAL = 180;
 const BASE_INTER_PADDING = 16;
 const BASE_FOOTER_PADDING = 16;
 const BASE_SAFE_MARGIN = 12;
 const BASE_MIN_HEIGHT = 120;
 const BASE_OPTION_MIN_HEIGHT = 220;
 const PAGE_TOP_MARGIN = 8;
+
+// Thresholds for option layout detection (in base units, before scaling)
+const HORIZONTAL_SPREAD_THRESHOLD = 15; // Options within this Y spread = horizontal
+// Gap between options > this = graphical content (e.g., tree diagrams, not just paragraph text)
+// Increased from 100 to 200 to avoid false positives with wrapped paragraph options
+const GRAPHICAL_GAP_THRESHOLD = 200;
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(value, max));
@@ -98,6 +112,43 @@ function buildCropBox(
   };
 }
 
+type OptionLayout = "horizontal" | "vertical" | "graphical";
+
+function detectOptionLayout(
+  optionItems: PositionedText[],
+  scale: number
+): { layout: OptionLayout; lastOptionY: number | null; firstOptionY: number | null } {
+  if (optionItems.length < 2) {
+    return { layout: "vertical", lastOptionY: null, firstOptionY: null };
+  }
+
+  const sortedByY = [...optionItems].sort((a, b) => a.y - b.y);
+  const firstOptionY = sortedByY[0].y;
+  const lastOptionY = sortedByY[sortedByY.length - 1].y;
+  const optionSpread = lastOptionY - firstOptionY;
+
+  // Horizontal layout: all options on nearly the same line (e.g., "a) X  b) Y  c) Z  d) W")
+  if (optionSpread < HORIZONTAL_SPREAD_THRESHOLD * scale) {
+    return { layout: "horizontal", lastOptionY, firstOptionY };
+  }
+
+  // Check for graphical content by looking at gaps between consecutive options
+  // Graphical content (like tree diagrams) has large gaps between option pairs
+  const gaps: number[] = [];
+  for (let i = 1; i < sortedByY.length; i++) {
+    gaps.push(sortedByY[i].y - sortedByY[i - 1].y);
+  }
+
+  // If any gap is very large, it's likely graphical content
+  const maxGap = Math.max(...gaps);
+  if (maxGap > GRAPHICAL_GAP_THRESHOLD * scale) {
+    return { layout: "graphical", lastOptionY, firstOptionY };
+  }
+
+  // Normal vertical layout: options listed one per line
+  return { layout: "vertical", lastOptionY, firstOptionY };
+}
+
 function computeQuestionCropBox({
   items,
   questionNo,
@@ -116,7 +167,9 @@ function computeQuestionCropBox({
   footerY: number | null;
 }): { box: CropBox; fallback: boolean; reason: string; topY: number; bottomY: number } {
   const topPadding = BASE_TOP_PADDING * scale;
-  const optionPadding = BASE_OPTION_PADDING * scale;
+  const optionPaddingHorizontal = BASE_OPTION_PADDING_HORIZONTAL * scale;
+  const optionPaddingVertical = BASE_OPTION_PADDING_VERTICAL * scale;
+  const optionPaddingGraphical = BASE_OPTION_PADDING_GRAPHICAL * scale;
   const interPadding = BASE_INTER_PADDING * scale;
   const footerPadding = BASE_FOOTER_PADDING * scale;
   const safeMargin = BASE_SAFE_MARGIN * scale;
@@ -131,64 +184,64 @@ function computeQuestionCropBox({
     marker && candidateNext && candidateNext.y > marker.y ? candidateNext : undefined;
   const pageBottom = viewportHeight - safeMargin;
 
+  // CRITICAL: Define the hard boundary - never go past next question
+  const hardBoundary = nextMarker
+    ? nextMarker.y - interPadding
+    : footerY !== null
+      ? footerY - footerPadding
+      : pageBottom;
+
   let topY = marker ? marker.y - topPadding : PAGE_TOP_MARGIN;
   topY = Math.max(topY, PAGE_TOP_MARGIN);
 
-  let bottomY = pageBottom;
-  let reason = "page-bottom";
+  let bottomY = hardBoundary;
+  let reason = nextMarker ? "next-question" : footerY !== null ? "footer" : "page-bottom";
 
   if (marker) {
     const bandStart = marker.y;
-    const bandEnd = nextMarker ? nextMarker.y : viewportHeight;
+    const bandEnd = hardBoundary; // Only look for options within our boundary
     const optionItems = items.filter(
       (item) => item.y >= bandStart && item.y <= bandEnd && OPTION_REGEX.test(item.text)
     );
     const optionCount = optionItems.length;
-    const lastOptionY =
-      optionCount > 0 ? Math.max(...optionItems.map((item) => item.y)) : null;
 
-    if (optionCount >= 2 && lastOptionY !== null) {
-      bottomY = lastOptionY + optionPadding;
-      reason = "options";
-    } else if (nextMarker) {
-      bottomY = nextMarker.y - interPadding;
-      reason = "next-question";
-    } else if (footerY !== null) {
-      bottomY = footerY - footerPadding;
-      reason = "last-question-footer";
-    } else {
-      bottomY = pageBottom;
-      reason = "last-question-page";
-    }
+    if (optionCount >= 2) {
+      const { layout, lastOptionY } = detectOptionLayout(optionItems, scale);
 
-    if (!nextMarker && optionCount >= 2 && lastOptionY !== null) {
-      bottomY = lastOptionY + optionPadding;
-      reason = "last-question-options";
+      // Select padding based on layout type
+      let effectivePadding: number;
+      switch (layout) {
+        case "horizontal":
+          effectivePadding = optionPaddingHorizontal;
+          break;
+        case "graphical":
+          effectivePadding = optionPaddingGraphical;
+          break;
+        case "vertical":
+        default:
+          effectivePadding = optionPaddingVertical;
+          break;
+      }
+
+      if (lastOptionY !== null) {
+        const computedBottom = lastOptionY + effectivePadding;
+        // ALWAYS respect the hard boundary
+        bottomY = Math.min(computedBottom, hardBoundary);
+        reason = `options-${layout}`;
+      }
     }
-    if (!nextMarker && optionCount < 2 && footerY !== null) {
-      bottomY = footerY - footerPadding;
-      reason = "last-question-footer";
-    }
+    // If no options found or < 2 options, bottomY stays at hardBoundary
   }
 
-  if (footerY !== null) {
-    bottomY = Math.min(bottomY, footerY - footerPadding);
-    if (reason !== "last-question-footer") {
-      reason = `${reason}+footer-guard`;
-    }
-  }
+  // Note: We intentionally do NOT expand the top into previous question's territory.
+  // If a question has minimal content (like horizontal options), that's fine.
+  // Expanding upward would show content from the previous question, which is worse
+  // than having some whitespace at the bottom.
 
-  if (marker && bottomY - topY < optionMinHeight) {
-    const desiredTop = marker.y - optionMinHeight;
-    const minTop = prevMarker ? prevMarker.y + interPadding : PAGE_TOP_MARGIN;
-    topY = Math.max(desiredTop, minTop);
-    reason = `${reason}+expanded-top`;
-  }
-
+  // Ensure absolute minimum height
   const desiredBottom = topY + minHeight;
   if (bottomY < desiredBottom) {
-    const maxBottom = footerY !== null ? footerY - footerPadding : pageBottom;
-    bottomY = Math.min(desiredBottom, maxBottom);
+    bottomY = Math.min(desiredBottom, hardBoundary);
   }
 
   let box = buildCropBox(viewportWidth, viewportHeight, topY, bottomY);
@@ -196,7 +249,7 @@ function computeQuestionCropBox({
 
   if (box.height < minHeight || box.height <= 1 || !marker) {
     const fallbackTop = PAGE_TOP_MARGIN;
-    const fallbackBottom = footerY !== null ? footerY - footerPadding : pageBottom;
+    const fallbackBottom = hardBoundary;
     box = buildCropBox(viewportWidth, viewportHeight, fallbackTop, fallbackBottom);
     fallback = true;
     reason = "fallback-full-page";
