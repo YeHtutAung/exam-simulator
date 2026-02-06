@@ -161,6 +161,8 @@ export function ImportDraftQuestionCropper({
     if (!imageRef.current || !imageSize.width || !displaySize.width) {
       return;
     }
+    event.preventDefault();
+    containerRef.current?.setPointerCapture(event.pointerId);
     const rect = imageRef.current.getBoundingClientRect();
     const startX = clamp(event.clientX - rect.left, 0, rect.width);
     const startY = clamp(event.clientY - rect.top, 0, rect.height);
@@ -191,57 +193,56 @@ export function ImportDraftQuestionCropper({
       });
     }
 
-    const handleMove = (moveEvent: PointerEvent) => {
-      if (!imageRef.current || !dragRef.current) {
-        return;
-      }
-      const rectMove = imageRef.current.getBoundingClientRect();
-      const currentX = clamp(moveEvent.clientX - rectMove.left, 0, rectMove.width);
-      const currentY = clamp(moveEvent.clientY - rectMove.top, 0, rectMove.height);
+  };
 
-      if (dragRef.current.mode === "new") {
-        const x1 = Math.min(dragRef.current.startX, currentX);
-        const y1 = Math.min(dragRef.current.startY, currentY);
-        const x2 = Math.max(dragRef.current.startX, currentX);
-        const y2 = Math.max(dragRef.current.startY, currentY);
+  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    if (!imageRef.current || !dragRef.current) {
+      return;
+    }
+    const rectMove = imageRef.current.getBoundingClientRect();
+    const currentX = clamp(event.clientX - rectMove.left, 0, rectMove.width);
+    const currentY = clamp(event.clientY - rectMove.top, 0, rectMove.height);
 
-        const nextCrop = clampCrop(
-          {
-            x: x1 * scale.x,
-            y: y1 * scale.y,
-            width: (x2 - x1) * scale.x,
-            height: (y2 - y1) * scale.y,
-          },
-          imageSize.width,
-          imageSize.height
-        );
-        setCrop(nextCrop);
-      } else {
-        const deltaX = (currentX - dragRef.current.startX) * scale.x;
-        const deltaY = (currentY - dragRef.current.startY) * scale.y;
-        const origin = dragRef.current.origin;
-        const nextCrop = clampCrop(
-          {
-            x: origin.x + deltaX,
-            y: origin.y + deltaY,
-            width: origin.width,
-            height: origin.height,
-          },
-          imageSize.width,
-          imageSize.height
-        );
-        setCrop(nextCrop);
-      }
-    };
+    if (dragRef.current.mode === "new") {
+      const x1 = Math.min(dragRef.current.startX, currentX);
+      const y1 = Math.min(dragRef.current.startY, currentY);
+      const x2 = Math.max(dragRef.current.startX, currentX);
+      const y2 = Math.max(dragRef.current.startY, currentY);
 
-    const handleUp = () => {
-      dragRef.current = null;
-      window.removeEventListener("pointermove", handleMove);
-      window.removeEventListener("pointerup", handleUp);
-    };
+      const nextCrop = clampCrop(
+        {
+          x: x1 * scale.x,
+          y: y1 * scale.y,
+          width: (x2 - x1) * scale.x,
+          height: (y2 - y1) * scale.y,
+        },
+        imageSize.width,
+        imageSize.height
+      );
+      setCrop(nextCrop);
+    } else {
+      const deltaX = (currentX - dragRef.current.startX) * scale.x;
+      const deltaY = (currentY - dragRef.current.startY) * scale.y;
+      const origin = dragRef.current.origin;
+      const nextCrop = clampCrop(
+        {
+          x: origin.x + deltaX,
+          y: origin.y + deltaY,
+          width: origin.width,
+          height: origin.height,
+        },
+        imageSize.width,
+        imageSize.height
+      );
+      setCrop(nextCrop);
+    }
+  };
 
-    window.addEventListener("pointermove", handleMove);
-    window.addEventListener("pointerup", handleUp);
+  const handlePointerUp = (event: PointerEvent<HTMLDivElement>) => {
+    if (containerRef.current?.hasPointerCapture(event.pointerId)) {
+      containerRef.current.releasePointerCapture(event.pointerId);
+    }
+    dragRef.current = null;
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -458,7 +459,9 @@ export function ImportDraftQuestionCropper({
           tabIndex={0}
           onKeyDown={handleKeyDown}
           onPointerDown={handlePointerDown}
-          className="relative overflow-hidden rounded-2xl border border-sand-300 bg-sand focus:outline-none focus:ring-2 focus:ring-accent/50"
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          className="relative overflow-hidden rounded-2xl border border-sand-300 bg-sand focus:outline-none focus:ring-2 focus:ring-accent/50 touch-none"
         >
           <img
             ref={imageRef}
