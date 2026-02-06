@@ -111,6 +111,8 @@ export default async function ExamRunnerPage({ searchParams }: ExamRunnerPagePro
   const exam = await prisma.exam.findUnique({
     where: { id: examId },
   });
+  const durationMinutes =
+    (exam as { durationMinutes?: number | null } | null)?.durationMinutes ?? 150;
 
   const questions = await prisma.question.findMany({
     where: { examId, type: "MCQ_SINGLE" },
@@ -134,11 +136,11 @@ export default async function ExamRunnerPage({ searchParams }: ExamRunnerPagePro
       : demoQuestions;
 
   return (
-    <ExamRunner
-      examId={examId}
-      title={exam?.title ?? "Exam Runner"}
-      questions={normalizedQuestions}
-      durationSeconds={defaultDurationSeconds}
-    />
-  );
+      <ExamRunner
+        examId={examId}
+        title={exam?.title ?? "Exam Runner"}
+        questions={normalizedQuestions}
+        durationSeconds={durationMinutes * 60}
+      />
+    );
 }

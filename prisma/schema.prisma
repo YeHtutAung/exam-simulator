@@ -41,6 +41,7 @@ model Exam {
   session   String
   paper     String
   language  String
+  durationMinutes Int @default(150)
   createdAt DateTime   @default(now())
 
   questions    Question[]

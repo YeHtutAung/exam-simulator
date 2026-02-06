@@ -29,6 +29,7 @@ export function ExamForm({ initialData, action, method, submitLabel }: ExamFormP
       session: initialData?.session ?? "",
       paper: initialData?.paper ?? "",
       language: initialData?.language ?? "JA",
+      durationMinutes: initialData?.durationMinutes ?? 150,
     },
   });
 
@@ -112,6 +113,23 @@ export function ExamForm({ initialData, action, method, submitLabel }: ExamFormP
             placeholder="JA"
           />
           {errors.language && <span className="text-xs text-red-600">{errors.language.message}</span>}
+        </label>
+        <label className="space-y-1 text-sm">
+          <span className="flex items-baseline gap-2 font-medium">
+            Duration (minutes)
+            <InfoTooltip text="Exam time limit in minutes (default 150 for AM)" />
+          </span>
+          <input
+            {...register("durationMinutes")}
+            type="number"
+            min={1}
+            max={600}
+            className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
+            placeholder="150"
+          />
+          {errors.durationMinutes && (
+            <span className="text-xs text-red-600">{errors.durationMinutes.message}</span>
+          )}
         </label>
       </div>
       <button
