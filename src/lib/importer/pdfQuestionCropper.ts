@@ -24,7 +24,7 @@ export type QuestionCrop = {
   reason?: string;
 };
 
-const QUESTION_REGEX = /^Q\s*(\d+)\.$/i;
+const QUESTION_REGEX = /\bQ\s*(\d+)\./i;
 const OPTION_REGEX = /^([a-d])\)/i;
 const FOOTER_REGEX = /^\s*-\s*\d+\s*-\s*$/;
 
@@ -42,11 +42,19 @@ function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(value, max));
 }
 
-function toPixelY(viewportHeight: number, pdfY: number) {
-  return viewportHeight - pdfY;
+type Viewport = {
+  width: number;
+  height: number;
+  convertToViewportPoint(x: number, y: number): [number, number];
+};
+
+function getTextItemY(item: any, viewport: Viewport): number {
+  // Use viewport's built-in conversion which handles coordinate system properly
+  const [, y] = viewport.convertToViewportPoint(item.transform[4], item.transform[5]);
+  return y;
 }
 
-function findQuestionMarkers(items: any[], viewportHeight: number): Marker[] {
+function findQuestionMarkers(items: any[], viewport: Viewport): Marker[] {
   const markers: Marker[] = [];
   for (const item of items) {
     if (!("str" in item) || !item.transform) {
@@ -58,7 +66,7 @@ function findQuestionMarkers(items: any[], viewportHeight: number): Marker[] {
       continue;
     }
     const questionNo = Number(match[1]);
-    const y = toPixelY(viewportHeight, item.transform[5]);
+    const y = getTextItemY(item, viewport);
     markers.push({ questionNo, y });
   }
 
@@ -218,9 +226,9 @@ export async function computeQuestionCrops(
       .filter((item) => "str" in item && item.transform)
       .map((item) => ({
         text: String(item.str).trim(),
-        y: toPixelY(viewport.height, item.transform[5]),
+        y: getTextItemY(item, viewport),
       }));
-    const markers = findQuestionMarkers(textContent.items, viewport.height);
+    const markers = findQuestionMarkers(textContent.items, viewport);
     const footerItems = items.filter((item) => FOOTER_REGEX.test(item.text));
     const footerY = footerItems.length > 0 ? Math.max(...footerItems.map((item) => item.y)) : null;
 
