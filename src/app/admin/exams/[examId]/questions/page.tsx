@@ -50,7 +50,15 @@ export default async function AdminExamQuestionsPage({ params }: AdminExamQuesti
               <p className="text-xs font-semibold uppercase text-slate-500">
                 Question {question.questionNo} · {question.type}
               </p>
-              <p className="text-sm text-slate-700">{question.stem}</p>
+              {question.stemImageUrl ? (
+                <img
+                  src={question.stemImageUrl}
+                  alt={`Question ${question.questionNo}`}
+                  className="mt-2 w-full max-w-xl rounded-xl border border-sand-300"
+                />
+              ) : (
+                <p className="text-sm text-slate-700">{question.stem}</p>
+              )}
             </div>
             <div className="flex items-center gap-3 text-xs">
               <Link href={`/questions/${question.id}`} className="font-semibold text-accent">
