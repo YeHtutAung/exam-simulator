@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ImportDraftQuestionForm } from "@/components/admin/ImportDraftQuestionForm";
 import { RecropButton } from "@/components/admin/RecropButton";
+import { ImportDraftQuestionCropper } from "@/components/admin/ImportDraftQuestionCropper";
 
 export default async function ImportDraftQuestionEditPage({
   params,
@@ -72,6 +73,27 @@ export default async function ImportDraftQuestionEditPage({
           choices,
         }}
       />
+
+      {question.pageImageUrl && (
+        <ImportDraftQuestionCropper
+          draftId={resolvedParams.draftId}
+          questionId={question.id}
+          pageImageUrl={question.pageImageUrl}
+          initialCrop={
+            question.cropX !== null &&
+            question.cropY !== null &&
+            question.cropW !== null &&
+            question.cropH !== null
+              ? {
+                  x: question.cropX,
+                  y: question.cropY,
+                  width: question.cropW,
+                  height: question.cropH,
+                }
+              : null
+          }
+        />
+      )}
 
       {question.stemImageUrl && (
         <div className="rounded-2xl border border-sand-300 bg-white p-4">

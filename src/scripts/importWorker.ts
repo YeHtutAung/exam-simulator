@@ -134,6 +134,7 @@ export async function processNextImportDraftOnce() {
     const questions = await parseFeQuestionPdf(questionPdf);
 
     await updateProgress(draftId, "RENDER_PAGES", 70);
+    const renderScale = 2.5;
     const pagesDir = path.join(
       process.cwd(),
       "public",
@@ -142,15 +143,22 @@ export async function processNextImportDraftOnce() {
       draftId,
       "pages"
     );
-    const renderedPages = await renderPdfPagesToPng(questionPdf, pagesDir);
+    const renderedPages = await renderPdfPagesToPng(questionPdf, pagesDir, renderScale);
     const pageMap = new Map(renderedPages.map((entry) => [entry.page, entry]));
     const publicRoot = path.join(process.cwd(), "public");
-    const questionCrops = await computeQuestionCrops(questionPdf, 2);
+    const questionCrops = await computeQuestionCrops(questionPdf, renderScale);
     const cropsByPage = new Map<number, typeof questionCrops>();
+    const cropBoxMap = new Map<number, { x: number; y: number; width: number; height: number }>();
     for (const crop of questionCrops) {
       const list = cropsByPage.get(crop.page) ?? [];
       list.push(crop);
       cropsByPage.set(crop.page, list);
+      cropBoxMap.set(crop.questionNo, {
+        x: Math.round(crop.box.x),
+        y: Math.round(crop.box.y),
+        width: Math.round(crop.box.width),
+        height: Math.round(crop.box.height),
+      });
     }
 
     const stemImageMap = new Map<number, string>();
@@ -219,7 +227,15 @@ export async function processNextImportDraftOnce() {
               type: "MCQ_SINGLE",
               stem: question.stem,
               correctAnswer: answers[question.questionNo] ?? null,
-              sourcePage: question.sourcePage ? String(question.sourcePage) : null,
+              sourcePage: question.sourcePage ?? null,
+              pageImageUrl: question.sourcePage
+                ? pageMap.get(question.sourcePage)?.url ?? null
+                : null,
+              cropScale: question.sourcePage ? renderScale : null,
+              cropX: cropBoxMap.get(question.questionNo)?.x ?? null,
+              cropY: cropBoxMap.get(question.questionNo)?.y ?? null,
+              cropW: cropBoxMap.get(question.questionNo)?.width ?? null,
+              cropH: cropBoxMap.get(question.questionNo)?.height ?? null,
               stemImageUrl: stemImageMap.get(question.questionNo) ?? null,
               warnings: questionWarnings.length > 0 ? questionWarnings : undefined,
             },

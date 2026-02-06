@@ -29,13 +29,14 @@ export async function POST(_request: Request, { params }: Params) {
   }
 
   const questionNo = draftQuestion.questionNo;
-  const sourcePage = draftQuestion.sourcePage ? Number(draftQuestion.sourcePage) : null;
+  const sourcePage = draftQuestion.sourcePage ?? null;
   if (!sourcePage) {
     return NextResponse.json({ error: "Source page missing." }, { status: 400 });
   }
 
   const buffer = await fs.readFile(draftQuestion.draft.questionPdfPath);
-  const crops = await computeQuestionCrops(buffer, 2);
+  const renderScale = 2.5;
+  const crops = await computeQuestionCrops(buffer, renderScale);
   let crop = crops.find((entry) => entry.questionNo === questionNo);
   let usedFallback = false;
 
@@ -99,6 +100,8 @@ export async function POST(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "Crop failed." }, { status: 500 });
   }
 
+  const cropBox = crop.box;
+
   const existingWarnings = Array.isArray(draftQuestion.warnings)
     ? draftQuestion.warnings
     : [];
@@ -110,6 +113,11 @@ export async function POST(_request: Request, { params }: Params) {
     where: { id: draftQuestion.id },
     data: {
       stemImageUrl: output.url,
+      cropX: Math.round(cropBox.x),
+      cropY: Math.round(cropBox.y),
+      cropW: Math.round(cropBox.width),
+      cropH: Math.round(cropBox.height),
+      cropScale: renderScale,
       warnings: nextWarnings.length > 0 ? nextWarnings : undefined,
     },
   });

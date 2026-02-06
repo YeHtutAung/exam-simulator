@@ -114,12 +114,17 @@ Notes:
 For FE imports, the worker can crop a per-question image and store it in `stemImageUrl`.
 The public question page will render the image when available and fall back to text otherwise.
 
+Manual cropping (per question):
+- Open `/admin/import/[draftId]/questions/[draftQuestionId]`.
+- Use the crop panel to select a rectangle on the full page image.
+- Save the crop to update `stemImageUrl` and store the crop box.
+
 Debug crop script:
 ```bash
 npm run crop:debug
 ```
 
-If a crop looks off, use the admin question editor and click "Re-crop image" to regenerate the stem image for that question.
+If a crop looks off, use the admin question editor to auto-detect or manually adjust the crop.
 
 ### Common failures
 - `ENOENT: no such file or directory, open '/mnt/data/...'`  

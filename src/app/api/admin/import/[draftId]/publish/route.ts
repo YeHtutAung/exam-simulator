@@ -108,7 +108,7 @@ export async function POST(_request: Request, { params }: Params) {
           stemImageUrl: draftQuestion.stemImageUrl ?? null,
           correctAnswer: draftQuestion.correctAnswer ?? "a",
           explanation: null,
-          sourcePage: draftQuestion.sourcePage,
+          sourcePage: draftQuestion.sourcePage ? String(draftQuestion.sourcePage) : null,
         },
       });
 

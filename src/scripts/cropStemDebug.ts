@@ -11,9 +11,10 @@ async function run() {
   const pagesDir = path.join(debugRoot, "pages");
   const outputDir = path.join(debugRoot, "stems");
   const publicRoot = process.cwd();
+  const renderScale = 2.5;
 
-  await renderPdfPagesToPng(buffer, pagesDir);
-  const crops = await computeQuestionCrops(buffer, 2);
+  await renderPdfPagesToPng(buffer, pagesDir, renderScale);
+  const crops = await computeQuestionCrops(buffer, renderScale);
 
   const cropsByPage = new Map<number, typeof crops>();
   for (const crop of crops) {

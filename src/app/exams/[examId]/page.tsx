@@ -59,7 +59,15 @@ export default async function ExamPage({ params, searchParams }: ExamPageProps) 
             <p className="text-xs font-semibold uppercase text-slate-500">
               Question {question.questionNo} · {question.type}
             </p>
-            <p className="mt-2 text-sm text-slate-700">{question.stem}</p>
+            {question.stemImageUrl ? (
+              <img
+                src={question.stemImageUrl}
+                alt={`Question ${question.questionNo}`}
+                className="mt-3 w-full rounded-xl border border-sand-300"
+              />
+            ) : (
+              <p className="mt-2 text-sm text-slate-700">{question.stem}</p>
+            )}
           </Link>
         ))}
         {questions.length === 0 && (

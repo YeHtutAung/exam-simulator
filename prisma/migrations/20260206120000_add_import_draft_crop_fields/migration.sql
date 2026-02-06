@@ -1,0 +1,10 @@
+ALTER TABLE "ImportDraftQuestion"
+ALTER COLUMN "sourcePage" TYPE INTEGER USING "sourcePage"::integer;
+
+ALTER TABLE "ImportDraftQuestion"
+ADD COLUMN "pageImageUrl" TEXT,
+ADD COLUMN "cropX" INTEGER,
+ADD COLUMN "cropY" INTEGER,
+ADD COLUMN "cropW" INTEGER,
+ADD COLUMN "cropH" INTEGER,
+ADD COLUMN "cropScale" DOUBLE PRECISION;

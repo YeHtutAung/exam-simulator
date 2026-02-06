@@ -135,7 +135,13 @@ model ImportDraftQuestion {
   stem           String
   stemImageUrl   String?
   correctAnswer  String?
-  sourcePage     String?
+  sourcePage     Int?
+  pageImageUrl   String?
+  cropX          Int?
+  cropY          Int?
+  cropW          Int?
+  cropH          Int?
+  cropScale      Float?
   warnings       Json?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
