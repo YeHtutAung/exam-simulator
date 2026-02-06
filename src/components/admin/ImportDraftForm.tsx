@@ -104,17 +104,31 @@ export function ImportDraftForm({ exams, defaultValues }: ImportDraftFormProps) 
             Exam
             <InfoTooltip text="Pick the exam to attach this import to." />
           </span>
-          <select
-            {...register("examId")}
-            className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
-          >
-            <option value="">Select exam</option>
-            {exams.map((exam) => (
-              <option key={exam.id} value={exam.id}>
-                {exam.session} {exam.paper} - {exam.title} ({exam.language})
-              </option>
-            ))}
-          </select>
+          <span className="relative block">
+            <select
+              {...register("examId")}
+              className="w-full cursor-pointer appearance-none rounded-lg border-2 border-sand-400 bg-white px-3 py-2 pr-10 text-slate-900 shadow-sm transition hover:border-sand-500 focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
+            >
+              <option value="">Select exam to import into</option>
+              {exams.map((exam) => (
+                <option key={exam.id} value={exam.id}>
+                  {exam.session} {exam.paper} - {exam.title} ({exam.language})
+                </option>
+              ))}
+            </select>
+            <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-600">
+              <svg viewBox="0 0 20 20" className="h-4 w-4" aria-hidden="true">
+                <path
+                  d="M5.5 7.5L10 12l4.5-4.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+          </span>
           {errors.examId && <span className="text-xs text-red-600">{errors.examId.message}</span>}
           {exams.length === 0 && (
             <span className="text-xs text-slate-500">
