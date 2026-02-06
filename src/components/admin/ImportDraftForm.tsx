@@ -148,8 +148,8 @@ export function ImportDraftForm({ exams, defaultValues }: ImportDraftFormProps) 
         </label>
         <label className="space-y-1 text-sm">
           <span className="flex items-baseline gap-2 font-medium">
-            Start page
-            <InfoTooltip text="First page number to start parsing from (optional)." />
+            Question Start Page
+            <InfoTooltip text="First question PDF page to start parsing from (optional)." />
           </span>
           <input
             type="number"
