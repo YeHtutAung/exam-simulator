@@ -89,19 +89,26 @@ export async function POST(_request: Request, { params }: Params) {
   }
 
   const result = await prisma.$transaction(async (tx) => {
-    const exam = await tx.exam.create({
-      data: {
-        title: draft.title,
-        session: draft.session,
-        paper: draft.paper,
-        language: draft.language,
-      },
-    });
+    // Use the target exam that was selected during import
+    // For backwards compatibility, create a new exam if no target was set (legacy drafts)
+    let examId = draft.targetExamId;
+
+    if (!examId) {
+      const newExam = await tx.exam.create({
+        data: {
+          title: draft.title,
+          session: draft.session,
+          paper: draft.paper,
+          language: draft.language,
+        },
+      });
+      examId = newExam.id;
+    }
 
     for (const draftQuestion of draft.questions) {
       const question = await tx.question.create({
         data: {
-          examId: exam.id,
+          examId: examId,
           questionNo: draftQuestion.questionNo,
           type: "MCQ_SINGLE",
           stem: draftQuestion.stem,
@@ -143,12 +150,12 @@ export async function POST(_request: Request, { params }: Params) {
       where: { id: draft.id },
       data: {
         status: "PUBLISHED",
-        publishedExamId: exam.id,
+        publishedExamId: examId,
       },
     });
 
-    return exam;
+    return examId;
   });
 
-  return NextResponse.json({ examId: result.id });
+  return NextResponse.json({ examId: result });
 }

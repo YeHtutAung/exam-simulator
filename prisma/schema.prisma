@@ -44,8 +44,9 @@ model Exam {
   durationMinutes Int @default(150)
   createdAt DateTime   @default(now())
 
-  questions    Question[]
-  importDrafts ImportDraft[]
+  questions            Question[]
+  targetedImportDrafts ImportDraft[] @relation("ImportDraftTarget")
+  publishedImportDrafts ImportDraft[] @relation("ImportDraftPublished")
 }
 
 model Question {
@@ -119,11 +120,13 @@ model ImportDraft {
   answerPdfPath    String?
   errors           Json?
   warnings         Json?
+  targetExamId     String?           @db.Uuid
   publishedExamId  String?           @db.Uuid
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 
-  publishedExam Exam? @relation(fields: [publishedExamId], references: [id])
+  targetExam    Exam? @relation("ImportDraftTarget", fields: [targetExamId], references: [id])
+  publishedExam Exam? @relation("ImportDraftPublished", fields: [publishedExamId], references: [id])
   questions     ImportDraftQuestion[]
 
   @@index([status, jobLockedAt])

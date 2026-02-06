@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 import path from "node:path";
-import os from "node:os";
 import fs from "node:fs/promises";
+import os from "node:os";
 import { prisma } from "@/lib/prisma";
+
+function getImportBaseDir(): string {
+  // Handle WSL/Windows path issues
+  // If homedir looks like a Unix path but we're on Windows, use USERPROFILE or a fallback
+  const homeDir = process.env.USERPROFILE || process.env.HOME || os.homedir();
+  return path.join(homeDir, ".exam-simulator", "imports");
+}
 
 function getFormValue(formData: FormData, key: string): string | null {
   const value = formData.get(key);
@@ -69,6 +76,7 @@ export async function POST(request: Request) {
       paper: exam.paper,
       language: exam.language,
       startPage: startPage ?? null,
+      targetExamId: examId,
       status: "PARSING",
       stage: "UPLOAD",
       progressInt: 0,
@@ -80,7 +88,7 @@ export async function POST(request: Request) {
       questionPdf.arrayBuffer(),
       answerPdf.arrayBuffer(),
     ]);
-    const baseDir = path.join(os.tmpdir(), "exam-import", draft.id);
+    const baseDir = path.join(getImportBaseDir(), draft.id);
     await fs.mkdir(baseDir, { recursive: true });
 
     const questionPath = path.join(baseDir, "question.pdf");
