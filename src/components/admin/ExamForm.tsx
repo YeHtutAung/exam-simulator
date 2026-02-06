@@ -13,6 +13,18 @@ type ExamFormProps = {
   submitLabel: string;
 };
 
+function InfoBadge({ text }: { text: string }) {
+  return (
+    <span
+      title={text}
+      aria-label={text}
+      className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-sand-300 bg-white text-[10px] font-semibold text-slate-600"
+    >
+      i
+    </span>
+  );
+}
+
 export function ExamForm({ initialData, action, method, submitLabel }: ExamFormProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +66,10 @@ export function ExamForm({ initialData, action, method, submitLabel }: ExamFormP
       {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
       <div className="grid gap-4 md:grid-cols-2">
         <label className="space-y-1 text-sm">
-          <span className="font-medium">Code</span>
+          <span className="flex items-center gap-2 font-medium">
+            Code
+            <InfoBadge text="Optional short identifier, e.g., FE-2024-APR-AM." />
+          </span>
           <input
             {...register("code")}
             className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
@@ -62,7 +77,10 @@ export function ExamForm({ initialData, action, method, submitLabel }: ExamFormP
           />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium">Session</span>
+          <span className="flex items-center gap-2 font-medium">
+            Session
+            <InfoBadge text="Exam session/date, e.g., 2024 Spring." />
+          </span>
           <input
             {...register("session")}
             className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
@@ -71,7 +89,10 @@ export function ExamForm({ initialData, action, method, submitLabel }: ExamFormP
           {errors.session && <span className="text-xs text-red-600">{errors.session.message}</span>}
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium">Title</span>
+          <span className="flex items-center gap-2 font-medium">
+            Title
+            <InfoBadge text="Display name of the exam." />
+          </span>
           <input
             {...register("title")}
             className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
@@ -80,7 +101,10 @@ export function ExamForm({ initialData, action, method, submitLabel }: ExamFormP
           {errors.title && <span className="text-xs text-red-600">{errors.title.message}</span>}
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium">Paper</span>
+          <span className="flex items-center gap-2 font-medium">
+            Paper
+            <InfoBadge text="Paper/section label, e.g., AM or PM." />
+          </span>
           <input
             {...register("paper")}
             className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
@@ -89,7 +113,10 @@ export function ExamForm({ initialData, action, method, submitLabel }: ExamFormP
           {errors.paper && <span className="text-xs text-red-600">{errors.paper.message}</span>}
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium">Language</span>
+          <span className="flex items-center gap-2 font-medium">
+            Language
+            <InfoBadge text="Language of the questions, e.g., JA or EN." />
+          </span>
           <input
             {...register("language")}
             className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
