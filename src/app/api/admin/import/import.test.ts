@@ -10,11 +10,17 @@ import { processNextImportDraftOnce } from "@/scripts/importWorker";
 
 describe("POST /api/admin/import", () => {
   let draftId: string | null = null;
+  let examId: string | null = null;
 
   afterAll(async () => {
     if (draftId) {
       await prisma.importDraft.delete({
         where: { id: draftId },
+      });
+    }
+    if (examId) {
+      await prisma.exam.delete({
+        where: { id: examId },
       });
     }
   });
@@ -27,11 +33,18 @@ describe("POST /api/admin/import", () => {
         readFile("/mnt/data/2020A_FE_AM_Answer.pdf"),
       ]);
 
+      const exam = await prisma.exam.create({
+        data: {
+          title: "FE 2020A AM",
+          session: "2020 Autumn",
+          paper: "AM",
+          language: "JA",
+        },
+      });
+      examId = exam.id;
+
       const formData = new FormData();
-      formData.set("title", "FE 2020A AM");
-      formData.set("session", "2020 Autumn");
-      formData.set("paper", "AM");
-      formData.set("language", "JA");
+      formData.set("examId", exam.id);
       formData.set(
         "questionPdf",
         new File([questionPdf], "2020A_FE_AM_Question.pdf", {

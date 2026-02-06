@@ -23,18 +23,12 @@ function getFormFile(formData: FormData, key: string): File | null {
 
 export async function POST(request: Request) {
   const formData = await request.formData();
-  const title = getFormValue(formData, "title");
-  const session = getFormValue(formData, "session");
-  const paper = getFormValue(formData, "paper");
-  const language = getFormValue(formData, "language");
+  const examId = getFormValue(formData, "examId");
   const questionPdf = getFormFile(formData, "questionPdf");
   const answerPdf = getFormFile(formData, "answerPdf");
 
-  if (!title || !session || !paper || !language) {
-    return NextResponse.json(
-      { error: "Missing required fields: title, session, paper, language." },
-      { status: 400 }
-    );
+  if (!examId) {
+    return NextResponse.json({ error: "Exam is required." }, { status: 400 });
   }
 
   if (!questionPdf || !answerPdf) {
@@ -44,12 +38,20 @@ export async function POST(request: Request) {
     );
   }
 
+  const exam = await prisma.exam.findUnique({
+    where: { id: examId },
+  });
+
+  if (!exam) {
+    return NextResponse.json({ error: "Exam not found." }, { status: 404 });
+  }
+
   const draft = await prisma.importDraft.create({
     data: {
-      title,
-      session,
-      paper,
-      language,
+      title: exam.title,
+      session: exam.session,
+      paper: exam.paper,
+      language: exam.language,
       status: "PARSING",
       stage: "UPLOAD",
       progressInt: 0,

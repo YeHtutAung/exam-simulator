@@ -19,10 +19,17 @@ type ImportDraftFormValues = ImportDraftInput & {
 };
 
 type ImportDraftFormProps = {
+  exams: Array<{
+    id: string;
+    title: string;
+    session: string;
+    paper: string;
+    language: string;
+  }>;
   defaultValues?: Partial<ImportDraftInput>;
 };
 
-export function ImportDraftForm({ defaultValues }: ImportDraftFormProps) {
+export function ImportDraftForm({ exams, defaultValues }: ImportDraftFormProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -33,10 +40,7 @@ export function ImportDraftForm({ defaultValues }: ImportDraftFormProps) {
   } = useForm<ImportDraftFormValues>({
     resolver: zodResolver(importDraftFormSchema),
     defaultValues: {
-      title: defaultValues?.title ?? "",
-      session: defaultValues?.session ?? "",
-      paper: defaultValues?.paper ?? "",
-      language: defaultValues?.language ?? "JA",
+      examId: defaultValues?.examId ?? "",
     },
   });
 
@@ -53,10 +57,7 @@ export function ImportDraftForm({ defaultValues }: ImportDraftFormProps) {
     }
 
     const formData = new FormData();
-    formData.append("title", values.title);
-    formData.append("session", values.session);
-    formData.append("paper", values.paper);
-    formData.append("language", values.language);
+    formData.append("examId", values.examId);
     formData.append("questionPdf", questionFile);
     formData.append("answerPdf", answerFile);
 
@@ -82,7 +83,7 @@ export function ImportDraftForm({ defaultValues }: ImportDraftFormProps) {
   };
 
   const helperText = useMemo(
-    () => "Upload the FE question and answer PDFs to create a draft.",
+    () => "Select an existing exam and upload the FE question and answer PDFs.",
     []
   );
 
@@ -100,55 +101,21 @@ export function ImportDraftForm({ defaultValues }: ImportDraftFormProps) {
       <div className="grid gap-4 md:grid-cols-2">
         <label className="space-y-1 text-sm">
           <span className="flex items-baseline gap-2 font-medium">
-            Title
-            <InfoTooltip text="Official display name of the exam" />
+            Exam
+            <InfoTooltip text="Pick the exam to attach this import to." />
           </span>
-          <input
-            {...register("title")}
+          <select
+            {...register("examId")}
             className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
-            placeholder="Fundamentals of Engineering"
-          />
-          {errors.title && <span className="text-xs text-red-600">{errors.title.message}</span>}
-        </label>
-        <label className="space-y-1 text-sm">
-          <span className="flex items-baseline gap-2 font-medium">
-            Session
-            <InfoTooltip text="Exam session name such as 2024 Spring or 2023 Autumn" />
-          </span>
-          <input
-            {...register("session")}
-            className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
-            placeholder="2020 Autumn"
-          />
-          {errors.session && (
-            <span className="text-xs text-red-600">{errors.session.message}</span>
-          )}
-        </label>
-        <label className="space-y-1 text-sm">
-          <span className="flex items-baseline gap-2 font-medium">
-            Paper
-            <InfoTooltip text="Exam paper type (AM or PM)" />
-          </span>
-          <input
-            {...register("paper")}
-            className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
-            placeholder="AM"
-          />
-          {errors.paper && <span className="text-xs text-red-600">{errors.paper.message}</span>}
-        </label>
-        <label className="space-y-1 text-sm">
-          <span className="flex items-baseline gap-2 font-medium">
-            Language
-            <InfoTooltip text="Language of the exam content (e.g. JA, EN)" />
-          </span>
-          <input
-            {...register("language")}
-            className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
-            placeholder="JA"
-          />
-          {errors.language && (
-            <span className="text-xs text-red-600">{errors.language.message}</span>
-          )}
+          >
+            <option value="">Select exam</option>
+            {exams.map((exam) => (
+              <option key={exam.id} value={exam.id}>
+                {exam.session} {exam.paper} - {exam.title} ({exam.language})
+              </option>
+            ))}
+          </select>
+          {errors.examId && <span className="text-xs text-red-600">{errors.examId.message}</span>}
         </label>
       </div>
 
