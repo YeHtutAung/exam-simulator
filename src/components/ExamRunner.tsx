@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ExamRunnerQuestion } from "@/components/ExamRunnerQuestion";
 
 type Choice = {
@@ -10,46 +11,207 @@ type Choice = {
 
 type Question = {
   id: string;
+  questionNo: number;
   stem: string;
   stemImageUrl?: string | null;
+  correctAnswer: "a" | "b" | "c" | "d";
   choices: Choice[];
 };
 
 type ExamRunnerProps = {
+  examId: string;
   title: string;
   questions: Question[];
+  durationSeconds: number;
 };
 
-export function ExamRunner({ title, questions }: ExamRunnerProps) {
+type StoredRun = {
+  startedAt: string;
+  durationSeconds: number;
+  answers: Record<string, "a" | "b" | "c" | "d" | null>;
+  submittedAt?: string;
+  timeUp?: boolean;
+};
+
+const formatTime = (totalSeconds: number) => {
+  const clamped = Math.max(0, totalSeconds);
+  const minutes = Math.floor(clamped / 60);
+  const seconds = clamped % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+};
+
+export function ExamRunner({ examId, title, questions, durationSeconds }: ExamRunnerProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<Record<string, "a" | "b" | "c" | "d" | null>>(
+    {},
+  );
+  const [startedAt, setStartedAt] = useState<string | null>(null);
+  const [remainingSeconds, setRemainingSeconds] = useState(durationSeconds);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [timeUp, setTimeUp] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
+  const router = useRouter();
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const total = questions.length;
   const currentQuestion = useMemo(() => questions[currentIndex], [questions, currentIndex]);
   const currentNumber = currentIndex + 1;
+  const storageKey = `examRunner:${examId}`;
 
   const handleSelect = (value: string) => {
     setAnswers((prev) => ({
       ...prev,
-      [currentQuestion.id]: value,
+      [currentQuestion.id]: value as "a" | "b" | "c" | "d",
     }));
   };
 
   const canGoBack = currentIndex > 0;
   const canGoNext = currentIndex < total - 1;
+  const showSubmit = total > 0 && currentIndex === total - 1;
+
+  const unansweredQuestions = useMemo(
+    () => questions.filter((question) => !answers[question.id]),
+    [answers, questions],
+  );
+
+  const persistRun = (data: StoredRun) => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(storageKey, JSON.stringify(data));
+  };
+
+  const finalizeSubmit = (reason: "manual" | "timeUp") => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    const submittedAt = new Date().toISOString();
+    const payload: StoredRun = {
+      startedAt: startedAt ?? submittedAt,
+      durationSeconds,
+      answers,
+      submittedAt,
+      timeUp: reason === "timeUp",
+    };
+    persistRun(payload);
+    router.push(`/exams/${examId}/results`);
+  };
+
+  const handleSubmitClick = () => {
+    if (unansweredQuestions.length === 0) {
+      finalizeSubmit("manual");
+      return;
+    }
+    setIsModalOpen(true);
+  };
+
+  const handleReviewUnanswered = () => {
+    if (unansweredQuestions.length === 0) {
+      setIsModalOpen(false);
+      return;
+    }
+    const firstUnanswered = unansweredQuestions[0];
+    const targetIndex = questions.findIndex((question) => question.id === firstUnanswered.id);
+    setCurrentIndex(targetIndex >= 0 ? targetIndex : 0);
+    setIsModalOpen(false);
+  };
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const storedRaw = window.localStorage.getItem(storageKey);
+    if (storedRaw) {
+      try {
+        const parsed = JSON.parse(storedRaw) as StoredRun;
+        if (parsed.submittedAt) {
+          window.localStorage.removeItem(storageKey);
+        } else {
+          setAnswers(parsed.answers ?? {});
+          setStartedAt(parsed.startedAt ?? new Date().toISOString());
+          setRemainingSeconds(parsed.durationSeconds ?? durationSeconds);
+        }
+      } catch {
+        window.localStorage.removeItem(storageKey);
+      }
+    }
+    setIsHydrated(true);
+  }, [durationSeconds, storageKey]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    if (!startedAt) {
+      const now = new Date().toISOString();
+      setStartedAt(now);
+      persistRun({
+        startedAt: now,
+        durationSeconds,
+        answers,
+      });
+      return;
+    }
+    persistRun({
+      startedAt,
+      durationSeconds,
+      answers,
+    });
+  }, [answers, durationSeconds, isHydrated, startedAt]);
+
+  useEffect(() => {
+    if (!isHydrated || !startedAt) return;
+    const startMs = new Date(startedAt).getTime();
+    const tick = () => {
+      const elapsedSeconds = Math.floor((Date.now() - startMs) / 1000);
+      const nextRemaining = Math.max(durationSeconds - elapsedSeconds, 0);
+      setRemainingSeconds(nextRemaining);
+      if (nextRemaining === 0) {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+        setTimeUp(true);
+      }
+    };
+    tick();
+    timerRef.current = setInterval(tick, 1000);
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [durationSeconds, isHydrated, startedAt]);
+
+  useEffect(() => {
+    if (!timeUp) return;
+    finalizeSubmit("timeUp");
+  }, [timeUp]);
+
+  useEffect(() => {
+    if (!isModalOpen) return;
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsModalOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [isModalOpen]);
 
   return (
     <div className="flex min-h-[calc(100vh-160px)] flex-col">
-      <header className="space-y-1 border-b border-sand-300 pb-4">
-        <h1 className="text-2xl font-semibold">{title}</h1>
-        <p className="text-sm text-slate-600">
-          Question {currentNumber} of {total}
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-3 border-b border-sand-300 pb-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold">{title}</h1>
+          <p className="text-sm text-slate-600">
+            Question {currentNumber} of {total}
+          </p>
+        </div>
+        <div className="rounded-full border border-sand-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700">
+          {timeUp ? "Time is up" : formatTime(remainingSeconds)}
+        </div>
       </header>
 
       <section className="flex-1 py-8">
         {currentQuestion ? (
           <ExamRunnerQuestion
+            key={currentQuestion.id}
             questionId={currentQuestion.id}
             stem={currentQuestion.stem}
             stemImageUrl={currentQuestion.stemImageUrl ?? null}
@@ -64,19 +226,24 @@ export function ExamRunner({ title, questions }: ExamRunnerProps) {
 
       <nav className="sticky bottom-0 border-t border-sand-300 bg-sand py-4">
         <div className="flex items-center justify-between">
-          {canGoBack ? (
+          <button
+            type="button"
+            onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
+            disabled={!canGoBack}
+            className="rounded-full border border-sand-300 bg-white px-5 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Back
+          </button>
+
+          {showSubmit ? (
             <button
               type="button"
-              onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
-              className="rounded-full border border-sand-300 bg-white px-5 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900"
+              onClick={handleSubmitClick}
+              className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-white hover:bg-accent-strong"
             >
-              Back
+              Submit
             </button>
           ) : (
-            <span />
-          )}
-
-          {canGoNext ? (
             <button
               type="button"
               onClick={() => setCurrentIndex((prev) => Math.min(total - 1, prev + 1))}
@@ -84,11 +251,59 @@ export function ExamRunner({ title, questions }: ExamRunnerProps) {
             >
               Next
             </button>
-          ) : (
-            <span />
           )}
         </div>
       </nav>
+
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Unanswered questions"
+            className="w-full max-w-lg rounded-2xl border border-sand-300 bg-white p-6"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 className="text-lg font-semibold text-slate-900">Unanswered questions</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              You have {unansweredQuestions.length} unanswered question
+              {unansweredQuestions.length === 1 ? "" : "s"}.
+            </p>
+            <p className="mt-3 text-sm text-slate-700">
+              {unansweredQuestions.map((question) => question.questionNo).join(", ")}
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={handleReviewUnanswered}
+                className="rounded-full border border-sand-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900"
+              >
+                Review unanswered
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  finalizeSubmit("manual");
+                }}
+                className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-strong"
+              >
+                Submit anyway
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="rounded-full px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

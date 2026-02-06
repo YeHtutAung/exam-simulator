@@ -72,6 +72,13 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:5432/exam_simulator?schem
 - Data validation lives in `src/lib/validators`.
 - Prepared for future extensions: mock exams, attempts, review stats, AI explanations.
 
+## Exam Runner Manual Tests (Phase 3)
+1. Start an exam run, answer a few questions, skip some, then click `Submit` on the last question: a modal lists unanswered questions.
+2. Click `Review unanswered`: you jump to the first unanswered question.
+3. Click `Submit anyway`: results page shows total, answered/unanswered, and correct counts.
+4. Refresh mid-run: timer and answers persist, and the countdown resumes.
+5. Let the timer expire: the run auto-submits and results show `Time is up`.
+
 ## Phase 2 PDF Import
 
 ### End-to-end sanity checklist

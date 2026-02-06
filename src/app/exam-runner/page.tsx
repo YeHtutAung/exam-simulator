@@ -4,7 +4,9 @@ import { prisma } from "@/lib/prisma";
 const demoQuestions = [
   {
     id: "demo-q1",
+    questionNo: 1,
     stem: "Which TCP/IP layer does IP belong to?",
+    correctAnswer: "c",
     choices: [
       { label: "a", text: "TCP" },
       { label: "b", text: "UDP" },
@@ -14,7 +16,9 @@ const demoQuestions = [
   },
   {
     id: "demo-q2",
+    questionNo: 2,
     stem: "Which protocol is used for secure web browsing?",
+    correctAnswer: "c",
     choices: [
       { label: "a", text: "FTP" },
       { label: "b", text: "HTTP" },
@@ -24,7 +28,9 @@ const demoQuestions = [
   },
   {
     id: "demo-q3",
+    questionNo: 3,
     stem: "Which tag is used to create a hyperlink in HTML?",
+    correctAnswer: "b",
     choices: [
       { label: "a", text: "<div>" },
       { label: "b", text: "<a>" },
@@ -34,7 +40,9 @@ const demoQuestions = [
   },
   {
     id: "demo-q4",
+    questionNo: 4,
     stem: "Which HTTP method is typically used to create a resource?",
+    correctAnswer: "b",
     choices: [
       { label: "a", text: "GET" },
       { label: "b", text: "POST" },
@@ -44,7 +52,9 @@ const demoQuestions = [
   },
   {
     id: "demo-q5",
+    questionNo: 5,
     stem: "Which CSS property controls the text size?",
+    correctAnswer: "a",
     choices: [
       { label: "a", text: "font-size" },
       { label: "b", text: "line-height" },
@@ -54,7 +64,9 @@ const demoQuestions = [
   },
   {
     id: "demo-q6",
+    questionNo: 6,
     stem: "Which protocol is used to resolve domain names?",
+    correctAnswer: "b",
     choices: [
       { label: "a", text: "DHCP" },
       { label: "b", text: "DNS" },
@@ -64,7 +76,9 @@ const demoQuestions = [
   },
   {
     id: "demo-q7",
+    questionNo: 7,
     stem: "Which SQL clause is used to filter rows?",
+    correctAnswer: "c",
     choices: [
       { label: "a", text: "ORDER BY" },
       { label: "b", text: "GROUP BY" },
@@ -81,9 +95,17 @@ type ExamRunnerPageProps = {
 export default async function ExamRunnerPage({ searchParams }: ExamRunnerPageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
   const examId = resolvedSearchParams.examId;
+  const defaultDurationSeconds = 150 * 60;
 
   if (!examId) {
-    return <ExamRunner title="HTML Quiz" questions={demoQuestions} />;
+    return (
+      <ExamRunner
+        examId="demo"
+        title="HTML Quiz"
+        questions={demoQuestions}
+        durationSeconds={defaultDurationSeconds}
+      />
+    );
   }
 
   const exam = await prisma.exam.findUnique({
@@ -100,8 +122,10 @@ export default async function ExamRunnerPage({ searchParams }: ExamRunnerPagePro
     questions.length >= 2
       ? questions.map((question) => ({
           id: question.id,
+          questionNo: question.questionNo,
           stem: question.stem,
           stemImageUrl: question.stemImageUrl ?? null,
+          correctAnswer: question.correctAnswer as "a" | "b" | "c" | "d",
           choices: question.choices.map((choice) => ({
             label: choice.label as "a" | "b" | "c" | "d",
             text: choice.text,
@@ -109,5 +133,12 @@ export default async function ExamRunnerPage({ searchParams }: ExamRunnerPagePro
         }))
       : demoQuestions;
 
-  return <ExamRunner title={exam?.title ?? "Exam Runner"} questions={normalizedQuestions} />;
+  return (
+    <ExamRunner
+      examId={examId}
+      title={exam?.title ?? "Exam Runner"}
+      questions={normalizedQuestions}
+      durationSeconds={defaultDurationSeconds}
+    />
+  );
 }

@@ -15,6 +15,46 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
+.exam-runner-question {
+  animation: exam-runner-fade 180ms ease-out;
+}
+
+.exam-runner-panel {
+  height: 460px;
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+  scrollbar-width: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  transition: opacity 180ms ease-out;
+}
+
+@media (max-width: 640px) {
+  .exam-runner-panel {
+    height: min(60vh, 420px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exam-runner-question {
+    animation: none;
+  }
+  .exam-runner-panel {
+    transition: none;
+  }
+}
+
+@keyframes exam-runner-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .bg-sand {
   background-color: var(--sand);
 }
