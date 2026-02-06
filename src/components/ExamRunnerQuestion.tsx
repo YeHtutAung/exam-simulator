@@ -35,14 +35,14 @@ export function ExamRunnerQuestion({
       ) : (
         <p className="text-lg leading-relaxed text-slate-900">{stem}</p>
       )}
-      <div className="divide-y divide-sand-300 border border-sand-300 bg-white">
+      <div className="flex flex-wrap gap-3 rounded-2xl border border-sand-300 bg-white p-3">
         {choices.map((choice) => {
           const inputId = `${groupName}-${choice.label}`;
           return (
             <label
               key={choice.label}
               htmlFor={inputId}
-              className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-sm text-slate-800"
+              className="flex cursor-pointer items-center gap-3 rounded-full border border-sand-200 px-4 py-2 text-sm text-slate-800"
             >
               <input
                 id={inputId}
