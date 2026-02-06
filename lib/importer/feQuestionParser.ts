@@ -104,15 +104,34 @@ async function mapQuestionPages(
   return pageMap;
 }
 
+async function extractTextFromPages(buffer: Buffer, startPage = 1): Promise<string> {
+  const doc = await pdfjs
+    .getDocument({ data: new Uint8Array(buffer), disableWorker: true })
+    .promise;
+  const parts: string[] = [];
+
+  for (let pageNum = startPage; pageNum <= doc.numPages; pageNum += 1) {
+    const page = await doc.getPage(pageNum);
+    const textContent = await page.getTextContent();
+    const pageText = textContent.items
+      .map((item) => ("str" in item ? item.str : ""))
+      .join(" ");
+    parts.push(pageText);
+  }
+
+  return parts.join(" ");
+}
+
 export async function parseFeQuestionPdf(
   buffer: Buffer,
   startPage = 1
 ): Promise<FeQuestion[]> {
-  const [parsed, pageMap] = await Promise.all([
-    pdfParse(buffer),
+  const [parsed, pageMap, pageText] = await Promise.all([
+    startPage > 1 ? null : pdfParse(buffer),
     mapQuestionPages(buffer, startPage),
+    startPage > 1 ? extractTextFromPages(buffer, startPage) : null,
   ]);
-  const text = parsed.text || "";
+  const text = (startPage > 1 ? pageText : parsed?.text) || "";
 
   if (!text.trim()) {
     throw new Error("Question PDF parse failed: no text extracted.");
