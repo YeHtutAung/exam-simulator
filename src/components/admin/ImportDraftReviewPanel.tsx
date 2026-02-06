@@ -101,7 +101,31 @@ export function ImportDraftReviewPanel({ initial }: { initial: DraftResponse }) 
       <div className="grid gap-4 md:grid-cols-4">
         <div className="rounded-2xl border border-sand-300 bg-white p-4">
           <p className="text-xs font-semibold uppercase text-slate-500">Status</p>
-          <p className="text-lg font-semibold">{draft.status}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-lg font-semibold">{draft.status}</p>
+            {draft.status === "PARSING" && (
+              <span className="inline-flex h-5 w-5 items-center justify-center text-accent">
+                <svg viewBox="0 0 24 24" className="h-4 w-4 animate-spin" aria-hidden="true">
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="9"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    opacity="0.25"
+                  />
+                  <path
+                    d="M21 12a9 9 0 0 1-9 9"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </span>
+            )}
+          </div>
           {draft.stage && (
             <p className="mt-1 text-xs font-medium text-slate-500">{draft.stage}</p>
           )}
