@@ -45,6 +45,7 @@ export function QuestionForm({
       questionNo: initialData?.questionNo ?? 1,
       type: initialData?.type ?? "MCQ_SINGLE",
       stem: initialData?.stem ?? "",
+      stemImageUrl: initialData?.stemImageUrl ?? "",
       correctAnswer: initialData?.correctAnswer ?? "",
       explanation: initialData?.explanation ?? "",
       sourcePage: initialData?.sourcePage ?? "",
@@ -99,6 +100,7 @@ export function QuestionForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
       <div className="grid gap-4 md:grid-cols-2">
+        <input type="hidden" {...register("stemImageUrl")} />
         <label className="space-y-1 text-sm">
           <span className="font-medium">Question No</span>
           <input

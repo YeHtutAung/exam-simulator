@@ -38,6 +38,7 @@ export default async function EditQuestionPage({ params }: EditQuestionPageProps
           questionNo: question.questionNo,
           type: question.type,
           stem: question.stem,
+          stemImageUrl: question.stemImageUrl ?? "",
           correctAnswer: question.correctAnswer,
           explanation: question.explanation ?? "",
           sourcePage: question.sourcePage ?? "",
