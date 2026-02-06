@@ -12,12 +12,14 @@ type ImportDraftQuestionFormProps = {
   draftId: string;
   questionId: string;
   initialValues: ImportDraftQuestionInput;
+  hasStemImage?: boolean;
 };
 
 export function ImportDraftQuestionForm({
   draftId,
   questionId,
   initialValues,
+  hasStemImage = false,
 }: ImportDraftQuestionFormProps) {
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -61,58 +63,71 @@ export function ImportDraftQuestionForm({
         </p>
       )}
 
-      <label className="space-y-1 text-sm">
-        <span className="font-medium">Stem</span>
-        <textarea
-          {...register("stem")}
-          rows={6}
-          className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
-        />
-        {errors.stem && <span className="text-xs text-red-600">{errors.stem.message}</span>}
-      </label>
+      {hasStemImage ? (
+        <input type="hidden" {...register("stem")} />
+      ) : (
+        <label className="space-y-1 text-sm">
+          <span className="font-medium">Stem</span>
+          <textarea
+            {...register("stem")}
+            rows={6}
+            className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
+          />
+          {errors.stem && <span className="text-xs text-red-600">{errors.stem.message}</span>}
+        </label>
+      )}
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <label className="space-y-1 text-sm">
-          <span className="font-medium">Choice A</span>
-          <input
-            {...register("choices.a")}
-            className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
-          />
-          {errors.choices?.a && (
-            <span className="text-xs text-red-600">{errors.choices.a.message}</span>
-          )}
-        </label>
-        <label className="space-y-1 text-sm">
-          <span className="font-medium">Choice B</span>
-          <input
-            {...register("choices.b")}
-            className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
-          />
-          {errors.choices?.b && (
-            <span className="text-xs text-red-600">{errors.choices.b.message}</span>
-          )}
-        </label>
-        <label className="space-y-1 text-sm">
-          <span className="font-medium">Choice C</span>
-          <input
-            {...register("choices.c")}
-            className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
-          />
-          {errors.choices?.c && (
-            <span className="text-xs text-red-600">{errors.choices.c.message}</span>
-          )}
-        </label>
-        <label className="space-y-1 text-sm">
-          <span className="font-medium">Choice D</span>
-          <input
-            {...register("choices.d")}
-            className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
-          />
-          {errors.choices?.d && (
-            <span className="text-xs text-red-600">{errors.choices.d.message}</span>
-          )}
-        </label>
-      </div>
+      {hasStemImage ? (
+        <div className="hidden">
+          <input type="hidden" {...register("choices.a")} />
+          <input type="hidden" {...register("choices.b")} />
+          <input type="hidden" {...register("choices.c")} />
+          <input type="hidden" {...register("choices.d")} />
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="space-y-1 text-sm">
+            <span className="font-medium">Choice A</span>
+            <input
+              {...register("choices.a")}
+              className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
+            />
+            {errors.choices?.a && (
+              <span className="text-xs text-red-600">{errors.choices.a.message}</span>
+            )}
+          </label>
+          <label className="space-y-1 text-sm">
+            <span className="font-medium">Choice B</span>
+            <input
+              {...register("choices.b")}
+              className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
+            />
+            {errors.choices?.b && (
+              <span className="text-xs text-red-600">{errors.choices.b.message}</span>
+            )}
+          </label>
+          <label className="space-y-1 text-sm">
+            <span className="font-medium">Choice C</span>
+            <input
+              {...register("choices.c")}
+              className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
+            />
+            {errors.choices?.c && (
+              <span className="text-xs text-red-600">{errors.choices.c.message}</span>
+            )}
+          </label>
+          <label className="space-y-1 text-sm">
+            <span className="font-medium">Choice D</span>
+            <input
+              {...register("choices.d")}
+              className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
+            />
+            {errors.choices?.d && (
+              <span className="text-xs text-red-600">{errors.choices.d.message}</span>
+            )}
+          </label>
+        </div>
+      )}
 
       <fieldset className="space-y-2 text-sm">
         <legend className="font-medium">Correct Answer</legend>

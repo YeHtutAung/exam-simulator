@@ -81,6 +81,7 @@ export default async function ImportDraftQuestionEditPage({
       <ImportDraftQuestionForm
         draftId={resolvedParams.draftId}
         questionId={question.id}
+        hasStemImage={Boolean(question.stemImageUrl)}
         initialValues={{
           stem: question.stem,
           correctAnswer: (question.correctAnswer ?? "a") as "a" | "b" | "c" | "d",
