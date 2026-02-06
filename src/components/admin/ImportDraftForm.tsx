@@ -98,38 +98,30 @@ export function ImportDraftForm({ exams, defaultValues }: ImportDraftFormProps) 
         {helperText}
       </div>
 
-      <div className="space-y-2">
-        <label className="flex items-baseline gap-2 text-sm font-medium text-slate-800">
-          Exam
-          <InfoTooltip text="Pick the exam to attach this import to." />
-        </label>
-        <div className="grid gap-3 md:grid-cols-2">
-          {exams.map((exam) => (
-            <label
-              key={exam.id}
-              className="group flex cursor-pointer items-start gap-3 rounded-2xl border border-sand-300 bg-white p-4 transition hover:-translate-y-0.5 hover:border-sand-400 hover:shadow-sm"
-            >
-              <input
-                type="radio"
-                value={exam.id}
-                {...register("examId")}
-                className="mt-1 h-4 w-4 accent-teal-700"
-              />
-              <div>
-                <p className="text-xs font-semibold uppercase text-slate-500">
-                  {exam.session} {exam.paper} · {exam.language}
-                </p>
-                <p className="mt-1 text-sm font-semibold text-slate-800">{exam.title}</p>
-              </div>
-            </label>
-          ))}
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="space-y-1 text-sm">
+          <span className="flex items-baseline gap-2 font-medium">
+            Exam
+            <InfoTooltip text="Pick the exam to attach this import to." />
+          </span>
+          <select
+            {...register("examId")}
+            className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
+          >
+            <option value="">Select exam</option>
+            {exams.map((exam) => (
+              <option key={exam.id} value={exam.id}>
+                {exam.session} {exam.paper} - {exam.title} ({exam.language})
+              </option>
+            ))}
+          </select>
+          {errors.examId && <span className="text-xs text-red-600">{errors.examId.message}</span>}
           {exams.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-sand-300 bg-white p-4 text-sm text-slate-500">
+            <span className="text-xs text-slate-500">
               No empty exams available. Create a new exam first.
-            </div>
+            </span>
           )}
-        </div>
-        {errors.examId && <span className="text-xs text-red-600">{errors.examId.message}</span>}
+        </label>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
