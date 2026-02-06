@@ -15,12 +15,19 @@ type ExamFormProps = {
 
 function InfoBadge({ text }: { text: string }) {
   return (
-    <span
-      title={text}
-      aria-label={text}
-      className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-sand-300 bg-white text-[10px] font-semibold text-slate-600"
-    >
-      i
+    <span className="group relative inline-flex">
+      <span
+        aria-label={text}
+        className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-sand-200 bg-sand-50 text-[11px] font-semibold text-slate-500 transition group-hover:border-sand-300 group-hover:text-slate-700"
+      >
+        i
+      </span>
+      <span className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 w-56 -translate-x-1/2 opacity-0 transition group-hover:opacity-100">
+        <span className="relative block rounded-xl bg-slate-900 px-3 py-2 text-xs leading-relaxed text-white shadow-lg">
+          {text}
+          <span className="absolute left-1/2 top-0 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-slate-900" />
+        </span>
+      </span>
     </span>
   );
 }
