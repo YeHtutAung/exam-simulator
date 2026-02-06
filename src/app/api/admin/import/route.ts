@@ -40,10 +40,17 @@ export async function POST(request: Request) {
 
   const exam = await prisma.exam.findUnique({
     where: { id: examId },
+    include: { _count: { select: { questions: true } } },
   });
 
   if (!exam) {
     return NextResponse.json({ error: "Exam not found." }, { status: 404 });
+  }
+  if (exam._count.questions > 0) {
+    return NextResponse.json(
+      { error: "Exam already has questions. Import requires an empty exam." },
+      { status: 400 }
+    );
   }
 
   const draft = await prisma.importDraft.create({

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 export default async function AdminImportPage() {
   const exams = await prisma.exam.findMany({
+    where: { questions: { none: {} } },
     orderBy: { createdAt: "desc" },
   });
 
