@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { importDraftSchema, ImportDraftInput } from "@/lib/validators/importDraft";
 import { useRouter } from "next/navigation";
+import { InfoTooltip } from "@/components/admin/InfoTooltip";
 
 const importDraftFormSchema = importDraftSchema.extend({
   questionPdf: z.any(),
@@ -98,7 +99,10 @@ export function ImportDraftForm({ defaultValues }: ImportDraftFormProps) {
 
       <div className="grid gap-4 md:grid-cols-2">
         <label className="space-y-1 text-sm">
-          <span className="font-medium">Title</span>
+          <span className="flex items-baseline gap-2 font-medium">
+            Title
+            <InfoTooltip text="Official display name of the exam" />
+          </span>
           <input
             {...register("title")}
             className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
@@ -107,7 +111,10 @@ export function ImportDraftForm({ defaultValues }: ImportDraftFormProps) {
           {errors.title && <span className="text-xs text-red-600">{errors.title.message}</span>}
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium">Session</span>
+          <span className="flex items-baseline gap-2 font-medium">
+            Session
+            <InfoTooltip text="Exam session name such as 2024 Spring or 2023 Autumn" />
+          </span>
           <input
             {...register("session")}
             className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
@@ -118,7 +125,10 @@ export function ImportDraftForm({ defaultValues }: ImportDraftFormProps) {
           )}
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium">Paper</span>
+          <span className="flex items-baseline gap-2 font-medium">
+            Paper
+            <InfoTooltip text="Exam paper type (AM or PM)" />
+          </span>
           <input
             {...register("paper")}
             className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
@@ -127,7 +137,10 @@ export function ImportDraftForm({ defaultValues }: ImportDraftFormProps) {
           {errors.paper && <span className="text-xs text-red-600">{errors.paper.message}</span>}
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium">Language</span>
+          <span className="flex items-baseline gap-2 font-medium">
+            Language
+            <InfoTooltip text="Language of the exam content (e.g. JA, EN)" />
+          </span>
           <input
             {...register("language")}
             className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
@@ -141,7 +154,10 @@ export function ImportDraftForm({ defaultValues }: ImportDraftFormProps) {
 
       <div className="grid gap-4 md:grid-cols-2">
         <label className="space-y-1 text-sm">
-          <span className="font-medium">Question PDF</span>
+          <span className="flex items-baseline gap-2 font-medium">
+            Question PDF
+            <InfoTooltip text="Upload the official question PDF for this exam." />
+          </span>
           <input
             type="file"
             accept="application/pdf"
@@ -150,7 +166,10 @@ export function ImportDraftForm({ defaultValues }: ImportDraftFormProps) {
           />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium">Answer PDF</span>
+          <span className="flex items-baseline gap-2 font-medium">
+            Answer PDF
+            <InfoTooltip text="Upload the official answer PDF for this exam." />
+          </span>
           <input
             type="file"
             accept="application/pdf"
