@@ -8,6 +8,7 @@ type Choice = {
 type ExamRunnerQuestionProps = {
   questionId: string;
   stem: string;
+  stemImageUrl?: string | null;
   choices: Choice[];
   selected?: string;
   onChange: (value: string) => void;
@@ -16,6 +17,7 @@ type ExamRunnerQuestionProps = {
 export function ExamRunnerQuestion({
   questionId,
   stem,
+  stemImageUrl,
   choices,
   selected,
   onChange,
@@ -24,7 +26,15 @@ export function ExamRunnerQuestion({
 
   return (
     <div className="space-y-6">
-      <p className="text-lg leading-relaxed text-slate-900">{stem}</p>
+      {stemImageUrl ? (
+        <img
+          src={stemImageUrl}
+          alt="Question"
+          className="w-full rounded-2xl border border-sand-300"
+        />
+      ) : (
+        <p className="text-lg leading-relaxed text-slate-900">{stem}</p>
+      )}
       <div className="divide-y divide-sand-300 border border-sand-300 bg-white">
         {choices.map((choice) => {
           const inputId = `${groupName}-${choice.label}`;

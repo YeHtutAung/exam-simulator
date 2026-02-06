@@ -101,6 +101,7 @@ export default async function ExamRunnerPage({ searchParams }: ExamRunnerPagePro
       ? questions.map((question) => ({
           id: question.id,
           stem: question.stem,
+          stemImageUrl: question.stemImageUrl ?? null,
           choices: question.choices.map((choice) => ({
             label: choice.label as "a" | "b" | "c" | "d",
             text: choice.text,

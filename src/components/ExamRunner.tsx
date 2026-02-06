@@ -11,6 +11,7 @@ type Choice = {
 type Question = {
   id: string;
   stem: string;
+  stemImageUrl?: string | null;
   choices: Choice[];
 };
 
@@ -51,6 +52,7 @@ export function ExamRunner({ title, questions }: ExamRunnerProps) {
           <ExamRunnerQuestion
             questionId={currentQuestion.id}
             stem={currentQuestion.stem}
+            stemImageUrl={currentQuestion.stemImageUrl ?? null}
             choices={currentQuestion.choices}
             selected={answers[currentQuestion.id]}
             onChange={handleSelect}
