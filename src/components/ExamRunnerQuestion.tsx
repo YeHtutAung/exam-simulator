@@ -35,14 +35,14 @@ export function ExamRunnerQuestion({
       ) : (
         <p className="text-lg leading-relaxed text-slate-900">{stem}</p>
       )}
-      <div className="flex flex-wrap gap-3 rounded-2xl border border-sand-300 bg-white p-3">
+      <div className="flex flex-wrap gap-x-4 gap-y-3 rounded-2xl border border-sand-300 bg-white p-3">
         {choices.map((choice) => {
           const inputId = `${groupName}-${choice.label}`;
           return (
             <label
               key={choice.label}
               htmlFor={inputId}
-              className="flex cursor-pointer items-center gap-3 rounded-full border border-sand-200 px-4 py-2 text-sm text-slate-800"
+              className="flex cursor-pointer items-center gap-2 rounded-full border border-sand-200 px-4 py-2 text-sm text-slate-800"
             >
               <input
                 id={inputId}
@@ -54,7 +54,7 @@ export function ExamRunnerQuestion({
                 className="h-4 w-4 accent-teal-700"
               />
               <span className="text-xs font-semibold uppercase text-slate-500">
-                {choice.label})
+                {choice.label}
               </span>
               {!stemImageUrl && <span>{choice.text}</span>}
             </label>
