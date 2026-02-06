@@ -35,9 +35,13 @@ type StoredRun = {
 
 const formatTime = (totalSeconds: number) => {
   const clamped = Math.max(0, totalSeconds);
-  const minutes = Math.floor(clamped / 60);
+  const hours = Math.floor(clamped / 3600);
+  const minutes = Math.floor((clamped % 3600) / 60);
   const seconds = clamped % 60;
-  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+    2,
+    "0",
+  )}:${String(seconds).padStart(2, "0")}`;
 };
 
 export function ExamRunner({ examId, title, questions, durationSeconds }: ExamRunnerProps) {
@@ -203,7 +207,11 @@ export function ExamRunner({ examId, title, questions, durationSeconds }: ExamRu
             Question {currentNumber} of {total}
           </p>
         </div>
-        <div className="rounded-full border border-sand-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700">
+        <div
+          className={`rounded-full border border-sand-300 bg-white px-4 py-2 text-sm font-semibold ${
+            !timeUp && remainingSeconds <= 20 * 60 ? "text-rose-600" : "text-slate-700"
+          }`}
+        >
           {timeUp ? "Time is up" : formatTime(remainingSeconds)}
         </div>
       </header>
