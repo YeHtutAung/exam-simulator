@@ -40,9 +40,10 @@ export function ImportDraftForm({ exams, defaultValues }: ImportDraftFormProps) 
     watch,
   } = useForm<ImportDraftFormValues>({
     resolver: zodResolver(importDraftFormSchema),
-    defaultValues: {
-      examId: defaultValues?.examId ?? "",
-    },
+      defaultValues: {
+        examId: defaultValues?.examId ?? "",
+        startPage: defaultValues?.startPage ?? undefined,
+      },
   });
 
   const questionFile = watch("questionPdf");
@@ -64,6 +65,9 @@ export function ImportDraftForm({ exams, defaultValues }: ImportDraftFormProps) 
 
     const formData = new FormData();
     formData.append("examId", values.examId);
+    if (Number.isFinite(values.startPage)) {
+      formData.append("startPage", String(values.startPage));
+    }
     formData.append("questionPdf", questionFile);
     formData.append("answerPdf", answerFile);
 
@@ -140,6 +144,22 @@ export function ImportDraftForm({ exams, defaultValues }: ImportDraftFormProps) 
             <span className="text-xs text-slate-500">
               No empty exams available. Create a new exam first.
             </span>
+          )}
+        </label>
+        <label className="space-y-1 text-sm">
+          <span className="flex items-baseline gap-2 font-medium">
+            Start page
+            <InfoTooltip text="First page number to start parsing from (optional)." />
+          </span>
+          <input
+            type="number"
+            min={1}
+            {...register("startPage", { valueAsNumber: true })}
+            className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
+            placeholder="1"
+          />
+          {errors.startPage && (
+            <span className="text-xs text-red-600">{errors.startPage.message}</span>
           )}
         </label>
       </div>

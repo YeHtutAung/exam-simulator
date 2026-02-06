@@ -105,6 +105,7 @@ model ImportDraft {
   session          String
   paper            String
   language         String
+  startPage        Int?
   status           ImportDraftStatus @default(PARSING)
   progressInt      Int               @default(0)
   stage            String?

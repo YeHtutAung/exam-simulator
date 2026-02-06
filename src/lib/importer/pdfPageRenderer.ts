@@ -19,7 +19,8 @@ function toPublicUrl(publicRoot: string, filePath: string): string {
 export async function renderPdfPagesToPng(
   buffer: Buffer,
   outDir: string,
-  scale = 2.5
+  scale = 2.5,
+  startPage = 1
 ): Promise<RenderedPage[]> {
   const publicRoot = path.join(process.cwd(), "public");
   configurePdfJsWorker();
@@ -30,7 +31,7 @@ export async function renderPdfPagesToPng(
     .promise;
   const pages: RenderedPage[] = [];
 
-  for (let pageNum = 1; pageNum <= doc.numPages; pageNum += 1) {
+  for (let pageNum = startPage; pageNum <= doc.numPages; pageNum += 1) {
     const page = await doc.getPage(pageNum);
     const viewport = page.getViewport({ scale });
     const canvas = createCanvas(viewport.width, viewport.height);

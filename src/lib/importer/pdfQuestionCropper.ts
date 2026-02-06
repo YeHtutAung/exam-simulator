@@ -191,7 +191,8 @@ function computeQuestionCropBox({
 
 export async function computeQuestionCrops(
   buffer: Buffer,
-  scale: number
+  scale: number,
+  startPage = 1
 ): Promise<QuestionCrop[]> {
   configurePdfJsWorker();
   const doc = await pdfjs
@@ -199,7 +200,7 @@ export async function computeQuestionCrops(
     .promise;
   const crops: QuestionCrop[] = [];
 
-  for (let pageNum = 1; pageNum <= doc.numPages; pageNum += 1) {
+  for (let pageNum = startPage; pageNum <= doc.numPages; pageNum += 1) {
     const page = await doc.getPage(pageNum);
     const viewport = page.getViewport({ scale });
     const textContent = await page.getTextContent();

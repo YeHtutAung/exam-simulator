@@ -71,13 +71,16 @@ function extractChoices(chunk: string): FeQuestionChoiceMap | null {
   return allFilled ? parts : null;
 }
 
-async function mapQuestionPages(buffer: Buffer): Promise<Map<number, number>> {
+async function mapQuestionPages(
+  buffer: Buffer,
+  startPage = 1
+): Promise<Map<number, number>> {
   const doc = await pdfjs
     .getDocument({ data: new Uint8Array(buffer), disableWorker: true })
     .promise;
   const pageMap = new Map<number, number>();
 
-  for (let pageNum = 1; pageNum <= doc.numPages; pageNum += 1) {
+  for (let pageNum = startPage; pageNum <= doc.numPages; pageNum += 1) {
     const page = await doc.getPage(pageNum);
     const textContent = await page.getTextContent();
     const pageText = textContent.items
@@ -101,10 +104,13 @@ async function mapQuestionPages(buffer: Buffer): Promise<Map<number, number>> {
   return pageMap;
 }
 
-export async function parseFeQuestionPdf(buffer: Buffer): Promise<FeQuestion[]> {
+export async function parseFeQuestionPdf(
+  buffer: Buffer,
+  startPage = 1
+): Promise<FeQuestion[]> {
   const [parsed, pageMap] = await Promise.all([
     pdfParse(buffer),
-    mapQuestionPages(buffer),
+    mapQuestionPages(buffer, startPage),
   ]);
   const text = parsed.text || "";
 

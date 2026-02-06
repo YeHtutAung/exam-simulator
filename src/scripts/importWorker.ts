@@ -126,12 +126,13 @@ export async function processNextImportDraftOnce() {
       fs.readFile(draft.questionPdfPath),
       fs.readFile(draft.answerPdfPath),
     ]);
+    const startPage = draft.startPage ?? 1;
 
     await updateProgress(draftId, "PARSE_ANSWERS", 10);
     const answers = await parseFeAnswerPdf(answerPdf);
 
     await updateProgress(draftId, "PARSE_QUESTIONS", 40);
-    const questions = await parseFeQuestionPdf(questionPdf);
+    const questions = await parseFeQuestionPdf(questionPdf, startPage);
 
     await updateProgress(draftId, "RENDER_PAGES", 70);
     const renderScale = 2.5;
@@ -143,10 +144,15 @@ export async function processNextImportDraftOnce() {
       draftId,
       "pages"
     );
-    const renderedPages = await renderPdfPagesToPng(questionPdf, pagesDir, renderScale);
+    const renderedPages = await renderPdfPagesToPng(
+      questionPdf,
+      pagesDir,
+      renderScale,
+      startPage
+    );
     const pageMap = new Map(renderedPages.map((entry) => [entry.page, entry]));
     const publicRoot = path.join(process.cwd(), "public");
-    const questionCrops = await computeQuestionCrops(questionPdf, renderScale);
+    const questionCrops = await computeQuestionCrops(questionPdf, renderScale, startPage);
     const cropsByPage = new Map<number, typeof questionCrops>();
     const cropBoxMap = new Map<number, { x: number; y: number; width: number; height: number }>();
     for (const crop of questionCrops) {

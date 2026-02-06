@@ -45,6 +45,7 @@ describe("POST /api/admin/import", () => {
 
       const formData = new FormData();
       formData.set("examId", exam.id);
+      formData.set("startPage", "1");
       formData.set(
         "questionPdf",
         new File([questionPdf], "2020A_FE_AM_Question.pdf", {

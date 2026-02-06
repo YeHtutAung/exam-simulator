@@ -24,6 +24,7 @@ function getFormFile(formData: FormData, key: string): File | null {
 export async function POST(request: Request) {
   const formData = await request.formData();
   const examId = getFormValue(formData, "examId");
+  const startPageValue = getFormValue(formData, "startPage");
   const questionPdf = getFormFile(formData, "questionPdf");
   const answerPdf = getFormFile(formData, "answerPdf");
 
@@ -34,6 +35,14 @@ export async function POST(request: Request) {
   if (!questionPdf || !answerPdf) {
     return NextResponse.json(
       { error: "Missing required files: questionPdf and answerPdf." },
+      { status: 400 }
+    );
+  }
+
+  const startPage = startPageValue ? Number(startPageValue) : null;
+  if (startPageValue && (!Number.isInteger(startPage) || startPage < 1)) {
+    return NextResponse.json(
+      { error: "Start page must be a positive integer." },
       { status: 400 }
     );
   }
@@ -59,6 +68,7 @@ export async function POST(request: Request) {
       session: exam.session,
       paper: exam.paper,
       language: exam.language,
+      startPage: startPage ?? null,
       status: "PARSING",
       stage: "UPLOAD",
       progressInt: 0,
