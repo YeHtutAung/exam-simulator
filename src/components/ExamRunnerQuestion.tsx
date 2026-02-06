@@ -56,7 +56,7 @@ export function ExamRunnerQuestion({
               <span className="text-xs font-semibold uppercase text-slate-500">
                 {choice.label})
               </span>
-              <span>{choice.text}</span>
+              {!stemImageUrl && <span>{choice.text}</span>}
             </label>
           );
         })}
