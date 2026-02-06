@@ -121,24 +121,58 @@ export async function POST(request: Request, { params }: Params) {
     urlPath = `/${urlPath}`;
   }
 
-  const updated = await prisma.importDraftQuestion.update({
-    where: { id: draftQuestion.id },
-    data: {
-      stemImageUrl: urlPath,
-      cropX: left,
-      cropY: top,
-      cropW: cropWidth,
-      cropH: cropHeight,
-      cropScale: draftQuestion.cropScale ?? null,
-    },
-    select: {
-      id: true,
-      stemImageUrl: true,
-      cropX: true,
-      cropY: true,
-      cropW: true,
-      cropH: true,
-    },
+  const updated = await prisma.$transaction(async (tx) => {
+    const existingWarnings = Array.isArray(draftQuestion.warnings)
+      ? draftQuestion.warnings.filter((entry) => entry !== "CROP_FALLBACK_FULL_PAGE")
+      : [];
+
+    const updatedQuestion = await tx.importDraftQuestion.update({
+      where: { id: draftQuestion.id },
+      data: {
+        stemImageUrl: urlPath,
+        cropX: left,
+        cropY: top,
+        cropW: cropWidth,
+        cropH: cropHeight,
+        cropScale: draftQuestion.cropScale ?? null,
+        warnings: existingWarnings.length > 0 ? existingWarnings : null,
+      },
+      select: {
+        id: true,
+        stemImageUrl: true,
+        cropX: true,
+        cropY: true,
+        cropW: true,
+        cropH: true,
+        warnings: true,
+      },
+    });
+
+    const draft = await tx.importDraft.findUnique({
+      where: { id: draftQuestion.draftId },
+      include: { questions: { select: { questionNo: true, warnings: true } } },
+    });
+
+    if (draft && draft.status !== "PUBLISHED") {
+      const warningEntries: string[] = [];
+      for (const question of draft.questions) {
+        if (Array.isArray(question.warnings)) {
+          for (const warning of question.warnings) {
+            warningEntries.push(`Q${question.questionNo}: ${warning}`);
+          }
+        }
+      }
+
+      await tx.importDraft.update({
+        where: { id: draft.id },
+        data: {
+          status: warningEntries.length > 0 ? "NEEDS_REVIEW" : "READY_TO_PUBLISH",
+          warnings: warningEntries.length > 0 ? warningEntries : null,
+        },
+      });
+    }
+
+    return updatedQuestion;
   });
 
   return NextResponse.json(updated);
