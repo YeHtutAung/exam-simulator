@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import { NextResponse } from "next/server";
 import sharp from "sharp";
 import { prisma } from "@/lib/prisma";
+import { requireOwnerApi } from "@/lib/rbac";
 
 type Params = {
   params: Promise<{
@@ -24,6 +25,8 @@ function toFilePath(publicRoot: string, url: string) {
 }
 
 export async function POST(request: Request, { params }: Params) {
+  const authResult = await requireOwnerApi();
+  if (!authResult.ok) return authResult.response;
   const resolvedParams = await params;
   const payload = await request.json().catch(() => null);
   const x = Number(payload?.x);

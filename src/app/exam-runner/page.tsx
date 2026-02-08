@@ -1,5 +1,7 @@
 import { ExamRunner } from "@/components/ExamRunner";
 import { prisma } from "@/lib/prisma";
+import { getServerAuthSession } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 const demoQuestions = [
   {
@@ -106,6 +108,11 @@ export default async function ExamRunnerPage({ searchParams }: ExamRunnerPagePro
         durationSeconds={defaultDurationSeconds}
       />
     );
+  }
+
+  const session = await getServerAuthSession();
+  if (!session?.user) {
+    redirect("/signin");
   }
 
   const exam = await prisma.exam.findUnique({

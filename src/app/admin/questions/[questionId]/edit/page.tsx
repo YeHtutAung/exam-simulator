@@ -1,11 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { QuestionForm } from "@/components/admin/QuestionForm";
+import { requireOwner } from "@/lib/rbac";
+import { PageHeader } from "@/components/PageHeader";
 
 type EditQuestionPageProps = {
   params: Promise<{ questionId: string }>;
 };
 
 export default async function EditQuestionPage({ params }: EditQuestionPageProps) {
+  await requireOwner();
   const resolvedParams = await params;
   const question = await prisma.question.findUnique({
     where: { id: resolvedParams.questionId },
@@ -25,10 +28,7 @@ export default async function EditQuestionPage({ params }: EditQuestionPageProps
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-sm font-semibold uppercase text-slate-500">Admin</p>
-        <h1 className="text-2xl font-semibold">Edit question</h1>
-      </div>
+      <PageHeader title="Edit question" fallbackHref="/owner/questions" />
       <QuestionForm
         examId={question.examId}
         action={`/api/questions/${question.id}`}

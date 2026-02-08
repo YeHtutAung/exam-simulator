@@ -17,6 +17,11 @@ Production-ready web app for practicing Japanese FE exam questions. Phase 1 incl
 - Admin dashboard (no auth yet)
 - CRUD for Exams and Questions (including choices + attachments)
 
+## Features (Phase 2: User Management)
+- Google login with NextAuth
+- User dashboard with attempts, scores, and suggestions
+- Admin user management (RBAC)
+
 ## Local Setup
 
 ### 1) Install dependencies
@@ -66,6 +71,17 @@ The local database URL is set in `.env`:
 ```
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/exam_simulator?schema=public"
 ```
+
+Phase 2 auth env vars:
+```
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="replace-with-a-strong-secret"
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
+OWNER_EMAILS="owner1@example.com,owner2@example.com"
+```
+
+Admin bootstrap: the first sign-in for any email in `OWNER_EMAILS` is assigned `OWNER` role. Everyone else becomes `USER`.
 
 ## Notes
 - CRUD APIs use Route Handlers under `src/app/api`.
@@ -143,3 +159,22 @@ If a crop looks off, use the admin question editor to auto-detect or manually ad
   The test fixtures are missing. Copy PDFs to `/mnt/data` (or `C:\mnt\data` on Windows).
 - `Draft is not ready to publish`  
   Open the draft detail page, fix warnings in the question editor, and ensure status becomes `READY_TO_PUBLISH`.
+
+## Phase 3A Attempt Pipeline
+
+### How it works
+- Starting an exam run creates an `Attempt` for the signed-in user.
+- Answer selections are batched and saved as `AttemptAnswer`.
+- Submit finalizes the attempt with server-side scoring.
+
+### Manual test checklist
+1. Sign in with Google and open `/exam-runner?examId=...`
+2. Answer a few questions and refresh:
+   - Answers persist locally
+   - Attempt continues saving answers
+3. Submit on the last question:
+   - Attempt status becomes `SUBMITTED`
+   - Dashboard at `/dashboard` shows the attempt
+4. Double-submit:
+   - No duplicate attempts
+   - Same totals returned

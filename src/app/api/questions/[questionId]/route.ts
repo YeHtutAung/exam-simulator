@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { questionSchema } from "@/lib/validators/question";
+import { requireOwnerApi } from "@/lib/rbac";
 
 type RouteContext = {
   params: Promise<{ questionId: string }>;
 };
 
 export async function GET(_: Request, context: RouteContext) {
+  const authResult = await requireOwnerApi();
+  if (!authResult.ok) return authResult.response;
   const resolvedParams = await context.params;
   const question = await prisma.question.findUnique({
     where: { id: resolvedParams.questionId },
@@ -21,6 +24,8 @@ export async function GET(_: Request, context: RouteContext) {
 }
 
 export async function PUT(request: Request, context: RouteContext) {
+  const authResult = await requireOwnerApi();
+  if (!authResult.ok) return authResult.response;
   const resolvedParams = await context.params;
   const body = await request.json();
   const parsed = questionSchema.safeParse(body);
@@ -68,6 +73,8 @@ export async function PUT(request: Request, context: RouteContext) {
 }
 
 export async function DELETE(_: Request, context: RouteContext) {
+  const authResult = await requireOwnerApi();
+  if (!authResult.ok) return authResult.response;
   const resolvedParams = await context.params;
   try {
     await prisma.question.delete({ where: { id: resolvedParams.questionId } });

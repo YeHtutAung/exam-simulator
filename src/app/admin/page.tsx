@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { requireOwner } from "@/lib/rbac";
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  await requireOwner();
   return (
     <div className="space-y-6">
       <div>
@@ -8,13 +10,20 @@ export default function AdminPage() {
         <h1 className="text-2xl font-semibold">Dashboard</h1>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
         <Link
           href="/admin/exams"
           className="rounded-2xl border border-sand-300 bg-white p-5 transition hover:-translate-y-0.5 hover:shadow-md"
         >
           <p className="text-sm font-semibold">Manage Exams</p>
           <p className="mt-2 text-xs text-slate-500">Create, edit, and remove exams.</p>
+        </Link>
+        <Link
+          href="/admin/users"
+          className="rounded-2xl border border-sand-300 bg-white p-5 transition hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <p className="text-sm font-semibold">Manage Users</p>
+          <p className="mt-2 text-xs text-slate-500">Roles, status, and access.</p>
         </Link>
         <Link
           href="/admin/import"

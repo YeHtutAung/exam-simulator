@@ -1,11 +1,14 @@
 import { headers } from "next/headers";
 import { ImportDraftReviewPanel } from "@/components/admin/ImportDraftReviewPanel";
+import { requireOwner } from "@/lib/rbac";
+import { PageHeader } from "@/components/PageHeader";
 
 export default async function ImportDraftDetailPage({
   params,
 }: {
   params: Promise<{ draftId: string }>;
 }) {
+  await requireOwner();
   const resolvedParams = await params;
   const headerList = await headers();
   const host = headerList.get("host");
@@ -22,8 +25,7 @@ export default async function ImportDraftDetailPage({
   if (!response.ok) {
     return (
       <div className="space-y-4">
-        <p className="text-sm font-semibold uppercase text-slate-500">Admin</p>
-        <h1 className="text-2xl font-semibold">Import draft</h1>
+        <PageHeader title="Import draft" fallbackHref="/owner/import" />
         <div className="rounded-2xl border border-sand-300 bg-white p-6 text-sm text-slate-600">
           Draft not found.
         </div>

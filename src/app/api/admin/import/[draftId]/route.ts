@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireOwnerApi } from "@/lib/rbac";
 
 type Params = {
   params: Promise<{
@@ -8,6 +9,8 @@ type Params = {
 };
 
 export async function GET(_request: Request, { params }: Params) {
+  const authResult = await requireOwnerApi();
+  if (!authResult.ok) return authResult.response;
   const resolvedParams = await params;
   const draft = await prisma.importDraft.findUnique({
     where: { id: resolvedParams.draftId },

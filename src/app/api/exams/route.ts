@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { examSchema } from "@/lib/validators/exam";
+import { requireOwnerApi } from "@/lib/rbac";
 
 export async function GET() {
+  const authResult = await requireOwnerApi();
+  if (!authResult.ok) return authResult.response;
   const exams = await prisma.exam.findMany({
     orderBy: { createdAt: "desc" },
   });
@@ -11,6 +14,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const authResult = await requireOwnerApi();
+  if (!authResult.ok) return authResult.response;
   const body = await request.json();
   const parsed = examSchema.safeParse(body);
 

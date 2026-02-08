@@ -29,6 +29,7 @@ type StoredRun = {
   startedAt: string;
   durationSeconds: number;
   answers: Record<string, "a" | "b" | "c" | "d" | null>;
+  attemptId?: string | null;
   submittedAt?: string;
   timeUp?: boolean;
 };
@@ -55,8 +56,19 @@ export function ExamRunner({ examId, title, questions, durationSeconds }: ExamRu
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [timeUp, setTimeUp] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [attemptId, setAttemptId] = useState<string | null>(null);
+  const [attemptError, setAttemptError] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">(
+    "idle",
+  );
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const router = useRouter();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingRef = useRef<
+    Map<string, { questionId: string; chosenOption: string; timeSpentSec?: number }>
+  >(new Map());
+  const flushTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const attemptIdRef = useRef<string | null>(null);
 
   const total = questions.length;
   const currentQuestion = useMemo(() => questions[currentIndex], [questions, currentIndex]);
@@ -68,6 +80,11 @@ export function ExamRunner({ examId, title, questions, durationSeconds }: ExamRu
       ...prev,
       [currentQuestion.id]: value as "a" | "b" | "c" | "d",
     }));
+    pendingRef.current.set(currentQuestion.id, {
+      questionId: currentQuestion.id,
+      chosenOption: value,
+    });
+    scheduleFlush();
   };
 
   const canGoBack = currentIndex > 0;
@@ -84,19 +101,66 @@ export function ExamRunner({ examId, title, questions, durationSeconds }: ExamRu
     window.localStorage.setItem(storageKey, JSON.stringify(data));
   };
 
-  const finalizeSubmit = (reason: "manual" | "timeUp") => {
+  const flushPending = async (overrideAttemptId?: string | null) => {
+    const id = overrideAttemptId ?? attemptIdRef.current;
+    if (!id || pendingRef.current.size === 0) return;
+    const batch = Array.from(pendingRef.current.values());
+    try {
+      setSaveStatus("saving");
+      const response = await fetch(`/api/attempts/${id}/answers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answers: batch }),
+      });
+      if (!response.ok) {
+        setSaveStatus("error");
+        return;
+      }
+      for (const answer of batch) {
+        pendingRef.current.delete(answer.questionId);
+      }
+      setSaveStatus("saved");
+      setLastSavedAt(new Date().toISOString());
+    } catch {
+      // keep pending for retry
+      setSaveStatus("error");
+    }
+  };
+
+  const scheduleFlush = () => {
+    if (examId === "demo") return;
+    if (flushTimerRef.current) {
+      clearTimeout(flushTimerRef.current);
+    }
+    flushTimerRef.current = setTimeout(() => {
+      flushPending();
+    }, 900);
+  };
+
+  const finalizeSubmit = async (reason: "manual" | "timeUp") => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     const submittedAt = new Date().toISOString();
+    if (examId !== "demo" && attemptIdRef.current) {
+      await flushPending(attemptIdRef.current);
+      const durationSec =
+        startedAt ? Math.max(0, Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000)) : undefined;
+      await fetch(`/api/attempts/${attemptIdRef.current}/submit`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ finishedAt: submittedAt, durationSec }),
+      }).catch(() => null);
+    }
     const payload: StoredRun = {
       startedAt: startedAt ?? submittedAt,
       durationSeconds,
       answers,
+      attemptId: attemptIdRef.current,
       submittedAt,
       timeUp: reason === "timeUp",
     };
     persistRun(payload);
-    router.push(`/exams/${examId}/results`);
+    router.push("/dashboard");
   };
 
   const handleSubmitClick = () => {
@@ -130,6 +194,7 @@ export function ExamRunner({ examId, title, questions, durationSeconds }: ExamRu
           setAnswers(parsed.answers ?? {});
           setStartedAt(parsed.startedAt ?? new Date().toISOString());
           setRemainingSeconds(parsed.durationSeconds ?? durationSeconds);
+          setAttemptId(parsed.attemptId ?? null);
         }
       } catch {
         window.localStorage.removeItem(storageKey);
@@ -137,6 +202,43 @@ export function ExamRunner({ examId, title, questions, durationSeconds }: ExamRu
     }
     setIsHydrated(true);
   }, [durationSeconds, storageKey]);
+
+  useEffect(() => {
+    attemptIdRef.current = attemptId;
+  }, [attemptId]);
+
+  useEffect(() => {
+    if (!isHydrated || examId === "demo") return;
+    if (attemptId) return;
+    const createAttempt = async () => {
+      setAttemptError(null);
+      try {
+        const response = await fetch("/api/attempts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            examId,
+            mode: "EXAM",
+            totalQuestions: questions.length,
+            metadata: { title },
+          }),
+        });
+        if (!response.ok) {
+          throw new Error("Failed to create attempt");
+        }
+        const payload = (await response.json()) as { attempt?: { id: string } };
+        const createdId = payload.attempt?.id ?? null;
+        setAttemptId(createdId);
+        attemptIdRef.current = createdId;
+        if (createdId) {
+          flushPending(createdId);
+        }
+      } catch {
+        setAttemptError("Unable to start attempt. Please refresh.");
+      }
+    };
+    createAttempt();
+  }, [attemptId, examId, isHydrated, questions.length, title]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -147,6 +249,7 @@ export function ExamRunner({ examId, title, questions, durationSeconds }: ExamRu
         startedAt: now,
         durationSeconds,
         answers,
+        attemptId,
       });
       return;
     }
@@ -154,8 +257,9 @@ export function ExamRunner({ examId, title, questions, durationSeconds }: ExamRu
       startedAt,
       durationSeconds,
       answers,
+      attemptId,
     });
-  }, [answers, durationSeconds, isHydrated, startedAt]);
+  }, [answers, durationSeconds, isHydrated, startedAt, attemptId]);
 
   useEffect(() => {
     if (!isHydrated || !startedAt) return;
@@ -200,6 +304,23 @@ export function ExamRunner({ examId, title, questions, durationSeconds }: ExamRu
 
   return (
     <div className="flex min-h-[calc(100vh-160px)] flex-col">
+      {attemptError && (
+        <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          {attemptError}
+        </div>
+      )}
+      {examId !== "demo" && (
+        <div className="mb-4 rounded-2xl border border-sand-300 bg-white px-4 py-3 text-xs text-slate-600">
+          <span className="font-semibold">Attempt status:</span>{" "}
+          {saveStatus === "saving"
+            ? "Saving answers..."
+            : saveStatus === "error"
+              ? "Save failed. Will retry."
+              : saveStatus === "saved"
+                ? `Saved${lastSavedAt ? ` at ${new Date(lastSavedAt).toLocaleTimeString()}` : ""}`
+                : "Ready"}
+        </div>
+      )}
       <header className="flex flex-wrap items-start justify-between gap-3 border-b border-sand-300 pb-4">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold">{title}</h1>

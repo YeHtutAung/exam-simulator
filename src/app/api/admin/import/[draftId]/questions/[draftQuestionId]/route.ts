@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { importDraftQuestionSchema } from "@/lib/validators/importDraftQuestion";
+import { requireOwnerApi } from "@/lib/rbac";
 
 type Params = {
   params: Promise<{
@@ -60,6 +61,8 @@ function computeDraftStatus(draft: {
 }
 
 export async function PATCH(request: Request, { params }: Params) {
+  const authResult = await requireOwnerApi();
+  if (!authResult.ok) return authResult.response;
   const resolvedParams = await params;
   const body = await request.json();
   const parsed = importDraftQuestionSchema.safeParse(body);

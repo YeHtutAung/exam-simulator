@@ -1,7 +1,9 @@
 import { ImportDraftForm } from "@/components/admin/ImportDraftForm";
 import { prisma } from "@/lib/prisma";
+import { requireOwner } from "@/lib/rbac";
 
 export default async function AdminImportPage() {
+  await requireOwner();
   const exams = await prisma.exam.findMany({
     where: { questions: { none: {} } },
     orderBy: { createdAt: "desc" },

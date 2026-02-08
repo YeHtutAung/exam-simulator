@@ -5,12 +5,15 @@ import { prisma } from "@/lib/prisma";
 import { ImportDraftQuestionForm } from "@/components/admin/ImportDraftQuestionForm";
 import { RecropButton } from "@/components/admin/RecropButton";
 import { ImportDraftQuestionCropper } from "@/components/admin/ImportDraftQuestionCropper";
+import { requireOwner } from "@/lib/rbac";
+import { PageHeader } from "@/components/PageHeader";
 
 export default async function ImportDraftQuestionEditPage({
   params,
 }: {
   params: Promise<{ draftId: string; draftQuestionId: string }>;
 }) {
+  await requireOwner();
   const resolvedParams = await params;
   const question = await prisma.importDraftQuestion.findFirst({
     where: {
@@ -62,21 +65,11 @@ export default async function ImportDraftQuestionEditPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold uppercase text-slate-500">Admin</p>
-          <h1 className="text-2xl font-semibold">Edit question</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Q{question.questionNo} - {question.draft.title}
-          </p>
-        </div>
-        <Link
-          href={`/admin/import/${resolvedParams.draftId}`}
-          className="text-sm font-semibold text-accent"
-        >
-          Back to draft
-        </Link>
-      </div>
+      <PageHeader
+        title={`Edit question · Q${question.questionNo}`}
+        fallbackHref={`/owner/import/${resolvedParams.draftId}`}
+      />
+      <p className="-mt-2 text-sm text-slate-500">{question.draft.title}</p>
 
       <ImportDraftQuestionForm
         draftId={resolvedParams.draftId}

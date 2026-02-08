@@ -1,12 +1,15 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { DeleteButton } from "@/components/admin/DeleteButton";
+import { requireOwner } from "@/lib/rbac";
+import { PageHeader } from "@/components/PageHeader";
 
 type AdminExamQuestionsPageProps = {
   params: Promise<{ examId: string }>;
 };
 
 export default async function AdminExamQuestionsPage({ params }: AdminExamQuestionsPageProps) {
+  await requireOwner();
   const resolvedParams = await params;
   const exam = await prisma.exam.findUnique({
     where: { id: resolvedParams.examId },
@@ -28,12 +31,9 @@ export default async function AdminExamQuestionsPage({ params }: AdminExamQuesti
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold uppercase text-slate-500">Admin</p>
-          <h1 className="text-2xl font-semibold">{exam.title} questions</h1>
-        </div>
+        <PageHeader title={`${exam.title} questions`} fallbackHref="/owner/exams" />
         <Link
-          href={`/admin/exams/${exam.id}/questions/new`}
+          href={`/owner/exams/${exam.id}/questions/new`}
           className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-strong"
         >
           New question

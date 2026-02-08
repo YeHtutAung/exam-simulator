@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
+import { getServerAuthSession } from "@/lib/auth";
+import { HeaderUserMenu } from "@/components/HeaderUserMenu";
 
 const notoSans = Noto_Sans_JP({
   variable: "--font-sans",
@@ -14,11 +16,12 @@ export const metadata: Metadata = {
   description: "Practice Japanese FE exam questions with fast search and clean UI.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await getServerAuthSession();
   return (
     <html lang="en">
       <body className={`${notoSans.variable} min-h-screen bg-sand text-slate-900`}>
@@ -28,12 +31,7 @@ export default function RootLayout({
               Exam Simulator
             </Link>
             <nav className="flex items-center gap-4 text-sm">
-              <Link href="/search" className="text-slate-700 hover:text-slate-900">
-                Search
-              </Link>
-              <Link href="/admin" className="text-slate-700 hover:text-slate-900">
-                Admin
-              </Link>
+              <HeaderUserMenu session={session} />
             </nav>
           </div>
         </header>

@@ -1,17 +1,17 @@
 import { QuestionForm } from "@/components/admin/QuestionForm";
+import { requireOwner } from "@/lib/rbac";
+import { PageHeader } from "@/components/PageHeader";
 
 type NewQuestionPageProps = {
   params: Promise<{ examId: string }>;
 };
 
 export default async function NewQuestionPage({ params }: NewQuestionPageProps) {
+  await requireOwner();
   const resolvedParams = await params;
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-sm font-semibold uppercase text-slate-500">Admin</p>
-        <h1 className="text-2xl font-semibold">New question</h1>
-      </div>
+      <PageHeader title="New question" fallbackHref={`/owner/exams/${resolvedParams.examId}/questions`} />
       <QuestionForm
         examId={resolvedParams.examId}
         action={`/api/exams/${resolvedParams.examId}/questions`}

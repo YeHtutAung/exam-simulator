@@ -1,6 +1,8 @@
 import { ExamForm } from "@/components/admin/ExamForm";
+import { requireOwner } from "@/lib/rbac";
 
-export default function NewExamPage() {
+export default async function NewExamPage() {
+  await requireOwner();
   return (
     <div className="space-y-6">
       <div>

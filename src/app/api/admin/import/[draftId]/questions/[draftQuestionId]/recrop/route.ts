@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import sharp from "sharp";
 import { prisma } from "@/lib/prisma";
 import { computeQuestionCrops, cropQuestionImages, type QuestionCrop } from "@/lib/importer/pdfQuestionCropper";
+import { requireOwnerApi } from "@/lib/rbac";
 
 type Params = {
   params: Promise<{
@@ -13,6 +14,8 @@ type Params = {
 };
 
 export async function POST(_request: Request, { params }: Params) {
+  const authResult = await requireOwnerApi();
+  if (!authResult.ok) return authResult.response;
   const resolvedParams = await params;
   const draftQuestion = await prisma.importDraftQuestion.findFirst({
     where: {

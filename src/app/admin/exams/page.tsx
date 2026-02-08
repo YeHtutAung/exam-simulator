@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { DeleteButton } from "@/components/admin/DeleteButton";
+import { requireOwner } from "@/lib/rbac";
 
 export default async function AdminExamsPage() {
+  await requireOwner();
   const exams = await prisma.exam.findMany({
     orderBy: { createdAt: "desc" },
   });

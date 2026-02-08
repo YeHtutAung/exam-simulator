@@ -1,11 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { ExamForm } from "@/components/admin/ExamForm";
+import { requireOwner } from "@/lib/rbac";
+import { PageHeader } from "@/components/PageHeader";
 
 type EditExamPageProps = {
   params: Promise<{ examId: string }>;
 };
 
 export default async function EditExamPage({ params }: EditExamPageProps) {
+  await requireOwner();
   const resolvedParams = await params;
   const exam = await prisma.exam.findUnique({
     where: { id: resolvedParams.examId },
@@ -21,10 +24,7 @@ export default async function EditExamPage({ params }: EditExamPageProps) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-sm font-semibold uppercase text-slate-500">Admin</p>
-        <h1 className="text-2xl font-semibold">Edit exam</h1>
-      </div>
+      <PageHeader title="Edit exam" fallbackHref="/owner/exams" />
       <ExamForm
         action={`/api/exams/${exam.id}`}
         method="PUT"

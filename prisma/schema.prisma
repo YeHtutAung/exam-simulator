@@ -34,6 +34,81 @@ enum ImportDraftStatus {
   PUBLISHED
 }
 
+enum UserRole {
+  OWNER
+  USER
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum AttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+}
+
+model User {
+  id            String       @id @default(uuid()) @db.Uuid
+  name          String?
+  email         String?      @unique
+  emailVerified DateTime?
+  image         String?
+  role          UserRole     @default(USER)
+  status        UserStatus   @default(ACTIVE)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  deletedAt     DateTime?
+
+  accounts  Account[]
+  sessions  Session[]
+  attempts  Attempt[]
+}
+
+model Account {
+  id                String   @id @default(uuid()) @db.Uuid
+  userId            String   @db.Uuid
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(uuid()) @db.Uuid
+  sessionToken String   @unique
+  userId       String   @db.Uuid
+  expires      DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
 model Exam {
   id        String     @id @default(uuid()) @db.Uuid
   code      String?    @unique
@@ -47,6 +122,7 @@ model Exam {
   questions            Question[]
   targetedImportDrafts ImportDraft[] @relation("ImportDraftTarget")
   publishedImportDrafts ImportDraft[] @relation("ImportDraftPublished")
+  attempts             Attempt[]
 }
 
 model Question {
@@ -65,6 +141,7 @@ model Question {
   exam        Exam        @relation(fields: [examId], references: [id], onDelete: Cascade)
   choices     Choice[]
   attachments Attachment[]
+  attemptAnswers AttemptAnswer[]
 
   @@unique([examId, questionNo])
   @@index([examId])
@@ -186,4 +263,45 @@ model ImportDraftAttachment {
   draftQuestion ImportDraftQuestion @relation(fields: [draftQuestionId], references: [id], onDelete: Cascade)
 
   @@index([draftQuestionId])
+}
+
+model Attempt {
+  id             String      @id @default(uuid()) @db.Uuid
+  userId         String      @db.Uuid
+  examId         String?     @db.Uuid
+  status         AttemptStatus @default(IN_PROGRESS)
+  startedAt      DateTime    @default(now())
+  finishedAt     DateTime?
+  score          Int?
+  totalQuestions Int         @default(0)
+  correctCount   Int         @default(0)
+  durationSec    Int?
+  metadata       Json?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exam     Exam?   @relation(fields: [examId], references: [id], onDelete: SetNull)
+  answers  AttemptAnswer[]
+
+  @@index([userId, createdAt])
+  @@index([examId])
+}
+
+model AttemptAnswer {
+  id            String   @id @default(uuid()) @db.Uuid
+  attemptId     String   @db.Uuid
+  questionId    String   @db.Uuid
+  chosenOption  String?
+  isCorrect     Boolean  @default(false)
+  answeredAt    DateTime?
+  timeSpentSec  Int?
+  createdAt     DateTime @default(now())
+
+  attempt  Attempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, questionId])
+  @@index([attemptId])
+  @@index([questionId])
 }

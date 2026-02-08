@@ -3,6 +3,7 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import os from "node:os";
 import { prisma } from "@/lib/prisma";
+import { requireOwnerApi } from "@/lib/rbac";
 
 function getImportBaseDir(): string {
   // Handle WSL/Windows path issues
@@ -29,6 +30,8 @@ function getFormFile(formData: FormData, key: string): File | null {
 }
 
 export async function POST(request: Request) {
+  const authResult = await requireOwnerApi();
+  if (!authResult.ok) return authResult.response;
   const formData = await request.formData();
   const examId = getFormValue(formData, "examId");
   const startPageValue = getFormValue(formData, "startPage");

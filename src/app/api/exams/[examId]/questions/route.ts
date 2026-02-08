@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { questionSchema } from "@/lib/validators/question";
+import { requireOwnerApi } from "@/lib/rbac";
 
 type RouteContext = {
   params: Promise<{ examId: string }>;
 };
 
 export async function GET(_: Request, context: RouteContext) {
+  const authResult = await requireOwnerApi();
+  if (!authResult.ok) return authResult.response;
   const resolvedParams = await context.params;
   const questions = await prisma.question.findMany({
     where: { examId: resolvedParams.examId },
@@ -18,6 +21,8 @@ export async function GET(_: Request, context: RouteContext) {
 }
 
 export async function POST(request: Request, context: RouteContext) {
+  const authResult = await requireOwnerApi();
+  if (!authResult.ok) return authResult.response;
   const resolvedParams = await context.params;
   const body = await request.json();
   const parsed = questionSchema.safeParse(body);
