@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ExamRunnerQuestion } from "@/components/ExamRunnerQuestion";
 
 type Choice = {
@@ -23,6 +23,10 @@ type ExamRunnerProps = {
   title: string;
   questions: Question[];
   durationSeconds: number;
+  persistAttempts?: boolean;
+  enableTimer?: boolean;
+  randomIds?: string[];
+  summaryRedirectHref?: string;
 };
 
 type StoredRun = {
@@ -45,7 +49,16 @@ const formatTime = (totalSeconds: number) => {
   )}:${String(seconds).padStart(2, "0")}`;
 };
 
-export function ExamRunner({ examId, title, questions, durationSeconds }: ExamRunnerProps) {
+export function ExamRunner({
+  examId,
+  title,
+  questions,
+  durationSeconds,
+  persistAttempts = true,
+  enableTimer = true,
+  randomIds,
+  summaryRedirectHref = "/",
+}: ExamRunnerProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, "a" | "b" | "c" | "d" | null>>(
     {},
@@ -55,6 +68,7 @@ export function ExamRunner({ examId, title, questions, durationSeconds }: ExamRu
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [timeUp, setTimeUp] = useState(false);
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [attemptError, setAttemptError] = useState<string | null>(null);
@@ -63,6 +77,7 @@ export function ExamRunner({ examId, title, questions, durationSeconds }: ExamRu
   );
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const pendingRef = useRef<
     Map<string, { questionId: string; chosenOption: string; timeSpentSec?: number }>
@@ -74,6 +89,16 @@ export function ExamRunner({ examId, title, questions, durationSeconds }: ExamRu
   const currentQuestion = useMemo(() => questions[currentIndex], [questions, currentIndex]);
   const currentNumber = currentIndex + 1;
   const storageKey = `examRunner:${examId}`;
+
+  useEffect(() => {
+    if (examId !== "random" || !randomIds || randomIds.length === 0) return;
+    const currentIds = searchParams.get("ids");
+    if (currentIds) return;
+    const next = new URLSearchParams(searchParams.toString());
+    next.set("mode", "random");
+    next.set("ids", randomIds.join(","));
+    router.replace(`/exam-runner?${next.toString()}`);
+  }, [examId, randomIds, router, searchParams]);
 
   const handleSelect = (value: string) => {
     setAnswers((prev) => ({
@@ -95,6 +120,16 @@ export function ExamRunner({ examId, title, questions, durationSeconds }: ExamRu
     () => questions.filter((question) => !answers[question.id]),
     [answers, questions],
   );
+
+  const summary = useMemo(() => {
+    const answered = questions.filter((question) => answers[question.id]).length;
+    const unanswered = questions.length - answered;
+    const correct = questions.filter((question) => {
+      const answer = answers[question.id];
+      return answer && answer === question.correctAnswer;
+    }).length;
+    return { answered, unanswered, correct };
+  }, [answers, questions]);
 
   const persistRun = (data: StoredRun) => {
     if (typeof window === "undefined") return;
@@ -141,7 +176,7 @@ export function ExamRunner({ examId, title, questions, durationSeconds }: ExamRu
     if (isSubmitting) return;
     setIsSubmitting(true);
     const submittedAt = new Date().toISOString();
-    if (examId !== "demo" && attemptIdRef.current) {
+    if (shouldPersist && attemptIdRef.current) {
       await flushPending(attemptIdRef.current);
       const durationSec =
         startedAt ? Math.max(0, Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000)) : undefined;
@@ -160,7 +195,11 @@ export function ExamRunner({ examId, title, questions, durationSeconds }: ExamRu
       timeUp: reason === "timeUp",
     };
     persistRun(payload);
-    router.push("/dashboard");
+    if (shouldPersist) {
+      router.push("/dashboard");
+      return;
+    }
+    setIsSummaryOpen(true);
   };
 
   const handleSubmitClick = () => {
@@ -207,8 +246,13 @@ export function ExamRunner({ examId, title, questions, durationSeconds }: ExamRu
     attemptIdRef.current = attemptId;
   }, [attemptId]);
 
+  const shouldPersist = persistAttempts && examId !== "demo";
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+    examId
+  );
+
   useEffect(() => {
-    if (!isHydrated || examId === "demo") return;
+    if (!isHydrated || !shouldPersist || !isUuid) return;
     if (attemptId) return;
     const createAttempt = async () => {
       setAttemptError(null);
@@ -238,7 +282,7 @@ export function ExamRunner({ examId, title, questions, durationSeconds }: ExamRu
       }
     };
     createAttempt();
-  }, [attemptId, examId, isHydrated, questions.length, title]);
+  }, [attemptId, examId, isHydrated, isUuid, questions.length, shouldPersist, title]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -262,7 +306,7 @@ export function ExamRunner({ examId, title, questions, durationSeconds }: ExamRu
   }, [answers, durationSeconds, isHydrated, startedAt, attemptId]);
 
   useEffect(() => {
-    if (!isHydrated || !startedAt) return;
+    if (!isHydrated || !startedAt || !enableTimer) return;
     const startMs = new Date(startedAt).getTime();
     const tick = () => {
       const elapsedSeconds = Math.floor((Date.now() - startMs) / 1000);
@@ -284,12 +328,12 @@ export function ExamRunner({ examId, title, questions, durationSeconds }: ExamRu
         timerRef.current = null;
       }
     };
-  }, [durationSeconds, isHydrated, startedAt]);
+  }, [durationSeconds, enableTimer, isHydrated, startedAt]);
 
   useEffect(() => {
-    if (!timeUp) return;
+    if (!timeUp || !enableTimer) return;
     finalizeSubmit("timeUp");
-  }, [timeUp]);
+  }, [enableTimer, timeUp]);
 
   useEffect(() => {
     if (!isModalOpen) return;
@@ -302,6 +346,25 @@ export function ExamRunner({ examId, title, questions, durationSeconds }: ExamRu
     return () => window.removeEventListener("keydown", handleKey);
   }, [isModalOpen]);
 
+  useEffect(() => {
+    if (!isSummaryOpen) return;
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        handleCloseSummary();
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [isSummaryOpen]);
+
+  const handleCloseSummary = () => {
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(storageKey);
+    }
+    setIsSummaryOpen(false);
+    router.replace(summaryRedirectHref);
+  };
+
   return (
     <div className="flex min-h-[calc(100vh-160px)] flex-col">
       {attemptError && (
@@ -309,7 +372,7 @@ export function ExamRunner({ examId, title, questions, durationSeconds }: ExamRu
           {attemptError}
         </div>
       )}
-      {examId !== "demo" && (
+      {shouldPersist && (
         <div className="mb-4 rounded-2xl border border-sand-300 bg-white px-4 py-3 text-xs text-slate-600">
           <span className="font-semibold">Attempt status:</span>{" "}
           {saveStatus === "saving"
@@ -328,13 +391,15 @@ export function ExamRunner({ examId, title, questions, durationSeconds }: ExamRu
             Question {currentNumber} of {total}
           </p>
         </div>
-        <div
-          className={`rounded-full border border-sand-300 bg-white px-4 py-2 text-sm font-semibold ${
-            !timeUp && remainingSeconds <= 20 * 60 ? "text-rose-600" : "text-slate-700"
-          }`}
-        >
-          {timeUp ? "Time is up" : formatTime(remainingSeconds)}
-        </div>
+        {enableTimer && (
+          <div
+            className={`rounded-full border border-sand-300 bg-white px-4 py-2 text-sm font-semibold ${
+              !timeUp && remainingSeconds <= 20 * 60 ? "text-rose-600" : "text-slate-700"
+            }`}
+          >
+            {timeUp ? "Time is up" : formatTime(remainingSeconds)}
+          </div>
+        )}
       </header>
 
       <section className="flex-1 py-8">
@@ -428,6 +493,43 @@ export function ExamRunner({ examId, title, questions, durationSeconds }: ExamRu
                 className="rounded-full px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900"
               >
                 Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isSummaryOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4"
+          onClick={handleCloseSummary}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Practice summary"
+            className="w-full max-w-lg rounded-2xl border border-sand-300 bg-white p-6"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 className="text-lg font-semibold text-slate-900">Practice summary</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              Random practice results (not saved).
+            </p>
+            <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-700">
+              <span>Total: {questions.length}</span>
+              <span>Answered: {summary.answered}</span>
+              <span>Unanswered: {summary.unanswered}</span>
+              <span>
+                Score: {summary.correct} / {questions.length}
+              </span>
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={handleCloseSummary}
+                className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-strong"
+              >
+                Close
               </button>
             </div>
           </div>

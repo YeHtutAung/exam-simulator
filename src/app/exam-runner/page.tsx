@@ -91,21 +91,92 @@ const demoQuestions = [
 ];
 
 type ExamRunnerPageProps = {
-  searchParams?: Promise<{ examId?: string }>;
+  searchParams?: Promise<{ examId?: string; mode?: string; limit?: string; ids?: string }>;
 };
 
 export default async function ExamRunnerPage({ searchParams }: ExamRunnerPageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
   const examId = resolvedSearchParams.examId;
+  const mode = resolvedSearchParams.mode;
+  const limit = Number(resolvedSearchParams.limit ?? "10");
+  const idsParam = resolvedSearchParams.ids;
   const defaultDurationSeconds = 150 * 60;
 
-  if (!examId) {
+  if (!examId && mode !== "latest" && mode !== "random") {
     return (
       <ExamRunner
         examId="demo"
         title="HTML Quiz"
         questions={demoQuestions}
         durationSeconds={defaultDurationSeconds}
+        persistAttempts={false}
+        enableTimer={false}
+        summaryRedirectHref="/"
+      />
+    );
+  }
+
+  if (mode === "random") {
+    const parsedIds = idsParam
+      ? idsParam
+          .split(",")
+          .map((id) => id.trim())
+          .filter(Boolean)
+      : [];
+
+    const sourceIds =
+      parsedIds.length > 0
+        ? parsedIds
+        : (await prisma.question.findMany({
+            select: { id: true },
+          })).map((entry) => entry.id);
+
+    if (sourceIds.length === 0) {
+      return (
+        <ExamRunner
+          examId="demo"
+          title="HTML Quiz"
+          questions={demoQuestions}
+          durationSeconds={defaultDurationSeconds}
+        />
+      );
+    }
+    const selectedIds =
+      parsedIds.length > 0
+        ? parsedIds
+        : sourceIds
+            .map((id) => id)
+            .sort(() => Math.random() - 0.5)
+            .slice(0, Math.max(1, Math.min(limit, sourceIds.length)));
+    const questions = await prisma.question.findMany({
+      where: { id: { in: selectedIds }, type: "MCQ_SINGLE" },
+      include: { choices: { orderBy: { sortOrder: "asc" } } },
+    });
+    const questionMap = new Map(questions.map((question) => [question.id, question]));
+    const orderedQuestions = selectedIds
+      .map((id) => questionMap.get(id))
+      .filter(Boolean);
+
+    return (
+      <ExamRunner
+        examId="random"
+        title="Random Practice"
+        questions={orderedQuestions.map((question) => ({
+          id: question!.id,
+          questionNo: question!.questionNo,
+          stem: question!.stem,
+          stemImageUrl: question!.stemImageUrl ?? null,
+          correctAnswer: question!.correctAnswer as "a" | "b" | "c" | "d",
+          choices: question!.choices.map((choice) => ({
+            label: choice.label as "a" | "b" | "c" | "d",
+            text: choice.text,
+          })),
+        }))}
+        durationSeconds={defaultDurationSeconds}
+        persistAttempts={false}
+        enableTimer={false}
+        randomIds={selectedIds}
+        summaryRedirectHref="/"
       />
     );
   }
@@ -113,6 +184,46 @@ export default async function ExamRunnerPage({ searchParams }: ExamRunnerPagePro
   const session = await getServerAuthSession();
   if (!session?.user) {
     redirect("/signin");
+  }
+
+  if (mode === "latest") {
+    const latestExam = await prisma.exam.findFirst({
+      orderBy: { createdAt: "desc" },
+    });
+    if (!latestExam) {
+      return (
+        <ExamRunner
+          examId="demo"
+          title="HTML Quiz"
+          questions={demoQuestions}
+          durationSeconds={defaultDurationSeconds}
+        />
+      );
+    }
+    return (
+      <ExamRunner
+        examId={latestExam.id}
+        title={latestExam.title ?? "Latest Exam"}
+        questions={(
+          await prisma.question.findMany({
+            where: { examId: latestExam.id, type: "MCQ_SINGLE" },
+            include: { choices: { orderBy: { sortOrder: "asc" } } },
+            orderBy: { questionNo: "asc" },
+          })
+        ).map((question) => ({
+          id: question.id,
+          questionNo: question.questionNo,
+          stem: question.stem,
+          stemImageUrl: question.stemImageUrl ?? null,
+          correctAnswer: question.correctAnswer as "a" | "b" | "c" | "d",
+          choices: question.choices.map((choice) => ({
+            label: choice.label as "a" | "b" | "c" | "d",
+            text: choice.text,
+          })),
+        }))}
+        durationSeconds={(latestExam.durationMinutes ?? 150) * 60}
+      />
+    );
   }
 
   const exam = await prisma.exam.findUnique({
