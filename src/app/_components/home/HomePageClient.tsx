@@ -1,8 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useRef } from "react";
 import type { RefObject } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type ExamSummary = {
   id: string;
@@ -15,6 +16,7 @@ type ExamSummary = {
 
 type HomePageClientProps = {
   exams: ExamSummary[];
+  isAuthenticated: boolean;
 };
 
 function languageBadgeLabel(language: string) {
@@ -76,8 +78,12 @@ function HeroIllustration() {
 
 function HeroSection({
   onPrimaryCta,
+  onSecondaryCta,
+  isAuthenticated,
 }: {
   onPrimaryCta: () => void;
+  onSecondaryCta: () => void;
+  isAuthenticated: boolean;
 }) {
   return (
     <section className="rounded-3xl border border-sand-200 bg-white p-8 shadow-sm">
@@ -87,26 +93,85 @@ function HeroSection({
             Focused practice
           </span>
           <h1 className="text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">
-            Pass the FE exam with focused practice.
+            Pass the FE exam with a realistic simulator
           </h1>
           <p className="max-w-xl text-sm text-slate-600 md:text-base">
-            Search real past questions and practice by topic.
+            Practice with real-style questions, timed exam modes, and detailed
+            performance reports—so you know exactly when you&apos;re ready.
           </p>
+          <ul className="space-y-2 text-sm text-slate-700">
+            <li className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#1F2937]" />
+              Timed exam and practice modes
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#1F2937]" />
+              Instant scoring and accuracy by topic (after free signup)
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#1F2937]" />
+              Attempt history with summary reports
+            </li>
+          </ul>
           <div className="flex flex-wrap items-center gap-3">
             <button
               type="button"
               onClick={onPrimaryCta}
               className="rounded-full bg-[#1F2937] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#111827] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1F2937]"
             >
-              Start practicing
+              Start free FE simulation
             </button>
-            <span className="text-xs text-slate-500">
-              Instant access to past questions
-            </span>
+            <button
+              type="button"
+              onClick={onSecondaryCta}
+              className="rounded-full border border-sand-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1F2937]"
+            >
+              {isAuthenticated ? "Go to dashboard" : "Sign in"}
+            </button>
           </div>
+          <p className="text-xs text-slate-500">No credit card · Quick signup</p>
         </div>
         <div className="rounded-2xl border border-sand-200 bg-sand p-4">
           <HeroIllustration />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function DashboardPreview() {
+  return (
+    <section className="rounded-3xl border border-sand-200 bg-white p-8 shadow-sm">
+      <div className="space-y-5">
+        <div>
+          <p className="text-xs font-semibold uppercase text-slate-500">
+            What you unlock after signup
+          </p>
+          <h2 className="mt-2 text-2xl font-semibold text-slate-900">
+            Track progress with real feedback
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm text-slate-600">
+            See detailed scores and accuracy after every attempt.
+          </p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {[
+            { title: "Score & accuracy", detail: "Instant score breakdown" },
+            { title: "Weak-topic analysis", detail: "Know what to study next" },
+            { title: "Attempt history", detail: "Review every session" },
+          ].map((card) => (
+            <div
+              key={card.title}
+              className="rounded-2xl border border-sand-200 bg-sand-100/60 p-4"
+            >
+              <div className="h-2 w-16 rounded-full bg-slate-300/60" />
+              <p className="mt-4 text-sm font-semibold text-slate-900">
+                {card.title}
+              </p>
+              <p className="mt-2 text-xs text-slate-500">{card.detail}</p>
+              <div className="mt-4 h-16 rounded-xl bg-white/70" />
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -187,23 +252,23 @@ function CommandSearch({
 function QuickStart() {
   const items = [
     {
-      title: "Random 10 questions",
-      description: "Warm up with a short mixed set.",
-      href: "/exam-runner?mode=random&limit=10",
+      title: "Simulate a real FE exam",
+      description: "Timed, scored, analyzed with real-style questions.",
+      href: "/exam-runner?mode=latest",
       accent: "#4F7DFF",
       soft: "rgba(79, 125, 255, 0.16)",
     },
     {
-      title: "Latest exam questions",
-      description: "Jump into the newest uploaded exam.",
-      href: "/exam-runner?mode=latest",
+      title: "Practice weak topics",
+      description: "Personalized focus areas (after signup).",
+      href: "/dashboard",
       accent: "#2BB673",
       soft: "rgba(43, 182, 115, 0.16)",
     },
     {
-      title: "Practice by Exam",
-      description: "Pick an exam and start practicing.",
-      href: "/search",
+      title: "Track your progress",
+      description: "Attempt history & summary reports (after signup).",
+      href: "/dashboard",
       accent: "#7B61FF",
       soft: "rgba(123, 97, 255, 0.16)",
     },
@@ -302,23 +367,34 @@ function ExamsGrid({ exams }: { exams: ExamSummary[] }) {
   );
 }
 
-export function HomePageClient({ exams }: HomePageClientProps) {
+export function HomePageClient({ exams, isAuthenticated }: HomePageClientProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const searchSectionRef = useRef<HTMLElement>(null);
+  const router = useRouter();
 
   const handlePrimaryCta = () => {
-    searchSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    window.setTimeout(() => {
-      inputRef.current?.focus();
-    }, 250);
+    router.push(isAuthenticated ? "/dashboard" : "/signin");
+  };
+
+  const handleSecondaryCta = () => {
+    router.push(isAuthenticated ? "/dashboard" : "/signin");
   };
 
   return (
     <div className="min-h-screen bg-sand text-slate-900">
       <div className="mx-auto flex max-w-[1200px] flex-col gap-10 px-6 py-12 md:px-8">
-        <HeroSection onPrimaryCta={handlePrimaryCta} />
+        <HeroSection
+          onPrimaryCta={handlePrimaryCta}
+          onSecondaryCta={handleSecondaryCta}
+          isAuthenticated={isAuthenticated}
+        />
+        <DashboardPreview />
         <div ref={searchSectionRef}>
           <CommandSearch exams={exams} inputRef={inputRef} />
+        </div>
+        <div className="rounded-2xl border border-sand-200 bg-white/70 px-4 py-3 text-xs text-slate-600">
+          Quick practice works without sign-in. Full reports, history, and accuracy tracking
+          require free registration.
         </div>
         <QuickStart />
         <ExamsGrid exams={exams} />
@@ -326,3 +402,7 @@ export function HomePageClient({ exams }: HomePageClientProps) {
     </div>
   );
 }
+
+
+
+
