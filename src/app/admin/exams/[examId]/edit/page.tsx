@@ -24,7 +24,7 @@ export default async function EditExamPage({ params }: EditExamPageProps) {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Edit exam" fallbackHref="/owner/exams" />
+      <PageHeader title="Edit exam" fallbackHref="/owner/exams" eyebrow="Owner Portal" />
       <ExamForm
         action={`/api/exams/${exam.id}`}
         method="PUT"

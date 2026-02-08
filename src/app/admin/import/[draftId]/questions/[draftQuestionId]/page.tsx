@@ -68,6 +68,7 @@ export default async function ImportDraftQuestionEditPage({
       <PageHeader
         title={`Edit question · Q${question.questionNo}`}
         fallbackHref={`/owner/import/${resolvedParams.draftId}`}
+        eyebrow="Owner Portal"
       />
       <p className="-mt-2 text-sm text-slate-500">{question.draft.title}</p>
 

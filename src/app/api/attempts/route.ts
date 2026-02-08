@@ -9,9 +9,13 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const payload =
     body && typeof body === "object" && !Array.isArray(body) ? body : {};
-  const examId =
+  const examIdCandidate =
     typeof payload.examId === "string" && payload.examId.length > 0
       ? payload.examId
+      : null;
+  const examId =
+    examIdCandidate && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(examIdCandidate)
+      ? examIdCandidate
       : null;
   const mode =
     payload.mode === "EXAM" || payload.mode === "RANDOM" || payload.mode === "TOPIC"

@@ -31,7 +31,11 @@ export default async function AdminExamQuestionsPage({ params }: AdminExamQuesti
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <PageHeader title={`${exam.title} questions`} fallbackHref="/owner/exams" />
+        <PageHeader
+          title={`${exam.title} questions`}
+          fallbackHref="/owner/exams"
+          eyebrow="Owner Portal"
+        />
         <Link
           href={`/owner/exams/${exam.id}/questions/new`}
           className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-strong"

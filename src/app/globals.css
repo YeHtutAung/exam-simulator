@@ -15,6 +15,89 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
+.dark {
+  --sand: #0f172a;
+  --sand-200: #1f2937;
+  --sand-300: #334155;
+  --ink: #e2e8f0;
+  --accent: #22c55e;
+  --accent-strong: #16a34a;
+}
+
+.dark body {
+  background: var(--sand);
+  color: var(--ink);
+}
+
+.dark .bg-white {
+  background-color: #0b1220;
+}
+
+.dark .bg-white\/70 {
+  background-color: rgba(11, 18, 32, 0.7);
+}
+
+.dark .bg-white\/60 {
+  background-color: rgba(11, 18, 32, 0.6);
+}
+
+.dark .bg-white\/50 {
+  background-color: rgba(11, 18, 32, 0.5);
+}
+
+.dark .bg-\[\#F7F6F2\] {
+  background-color: #0f172a;
+}
+
+.dark .text-\[\#1F2937\] {
+  color: #e2e8f0;
+}
+
+.dark .bg-\[\#1F2937\] {
+  background-color: #0b1220;
+}
+
+
+.dark .bg-sand {
+  background-color: var(--sand);
+}
+
+.dark .bg-sand-100 {
+  background-color: #0b1220;
+}
+
+.dark .border-sand-200 {
+  border-color: var(--sand-200);
+}
+
+.dark .border-sand-300 {
+  border-color: var(--sand-300);
+}
+
+.dark .text-slate-900 {
+  color: #e2e8f0;
+}
+
+.dark .text-slate-800 {
+  color: #e2e8f0;
+}
+
+.dark .text-slate-700 {
+  color: #cbd5e1;
+}
+
+.dark .text-slate-600 {
+  color: #94a3b8;
+}
+
+.dark .text-slate-500 {
+  color: #94a3b8;
+}
+
+.dark .bg-sand-100\/60 {
+  background-color: rgba(11, 18, 32, 0.6);
+}
+
 .exam-runner-question {
   animation: exam-runner-fade 180ms ease-out;
 }

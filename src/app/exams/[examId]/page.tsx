@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { PAGE_SIZE } from "@/lib/pagination";
 import { Pagination } from "@/components/Pagination";
+import { PageHeader } from "@/components/PageHeader";
 
 type ExamPageProps = {
   params: Promise<{ examId: string }>;
@@ -41,6 +42,7 @@ export default async function ExamPage({ params, searchParams }: ExamPageProps) 
 
   return (
     <div className="space-y-6">
+      <PageHeader title={exam.title} fallbackHref="/search" />
       <div>
         <p className="text-sm font-semibold uppercase text-slate-500">
           {exam.session} {exam.paper}

@@ -11,7 +11,11 @@ export default async function NewQuestionPage({ params }: NewQuestionPageProps) 
   const resolvedParams = await params;
   return (
     <div className="space-y-6">
-      <PageHeader title="New question" fallbackHref={`/owner/exams/${resolvedParams.examId}/questions`} />
+      <PageHeader
+        title="New question"
+        fallbackHref={`/owner/exams/${resolvedParams.examId}/questions`}
+        eyebrow="Owner Portal"
+      />
       <QuestionForm
         examId={resolvedParams.examId}
         action={`/api/exams/${resolvedParams.examId}/questions`}

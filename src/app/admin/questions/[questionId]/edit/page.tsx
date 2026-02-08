@@ -28,7 +28,7 @@ export default async function EditQuestionPage({ params }: EditQuestionPageProps
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Edit question" fallbackHref="/owner/questions" />
+      <PageHeader title="Edit question" fallbackHref="/owner/questions" eyebrow="Owner Portal" />
       <QuestionForm
         examId={question.examId}
         action={`/api/questions/${question.id}`}

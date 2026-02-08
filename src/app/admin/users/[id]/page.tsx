@@ -19,7 +19,7 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="User detail" fallbackHref="/owner/users" />
+      <PageHeader title="User detail" fallbackHref="/owner/users" eyebrow="Owner Portal" />
       <p className="-mt-2 text-sm text-slate-500">{user.email ?? "No email"}</p>
 
       <UserDetailForm

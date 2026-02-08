@@ -105,7 +105,7 @@ function HeroSection({
             </span>
           </div>
         </div>
-        <div className="rounded-2xl border border-sand-200 bg-[#F7F6F2] p-4">
+        <div className="rounded-2xl border border-sand-200 bg-sand p-4">
           <HeroIllustration />
         </div>
       </div>
@@ -148,7 +148,7 @@ function CommandSearch({
             id="home-search-input"
             ref={inputRef}
             name="query"
-            placeholder="Search questions by keyword or topic…"
+            placeholder="Search questions by keyword or topic..."
             className="min-w-[220px] flex-1 bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400 md:text-base"
             aria-label="Search questions by keyword or topic"
           />
@@ -189,20 +189,20 @@ function QuickStart() {
     {
       title: "Random 10 questions",
       description: "Warm up with a short mixed set.",
-      href: "/search?mode=random&limit=10",
+      href: "/exam-runner?mode=random&limit=10",
       accent: "#4F7DFF",
       soft: "rgba(79, 125, 255, 0.16)",
     },
     {
       title: "Latest exam questions",
       description: "Jump into the newest uploaded exam.",
-      href: "/search?sort=latest",
+      href: "/exam-runner?mode=latest",
       accent: "#2BB673",
       soft: "rgba(43, 182, 115, 0.16)",
     },
     {
-      title: "Practice by topic",
-      description: "Focus on a specific subject area.",
+      title: "Practice by Exam",
+      description: "Pick an exam and start practicing.",
       href: "/search",
       accent: "#7B61FF",
       soft: "rgba(123, 97, 255, 0.16)",
@@ -230,9 +230,7 @@ function QuickStart() {
           >
             <p className="text-sm font-semibold text-slate-900">{item.title}</p>
             <p className="mt-2 text-xs text-slate-500">{item.description}</p>
-            <div className="mt-4 text-xs font-semibold text-slate-700">
-              Start →
-            </div>
+            <div className="mt-4 text-xs font-semibold text-slate-700">Start -&gt;</div>
           </Link>
         ))}
       </div>
@@ -316,7 +314,7 @@ export function HomePageClient({ exams }: HomePageClientProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F6F2] text-[#1F2937]">
+    <div className="min-h-screen bg-sand text-slate-900">
       <div className="mx-auto flex max-w-[1200px] flex-col gap-10 px-6 py-12 md:px-8">
         <HeroSection onPrimaryCta={handlePrimaryCta} />
         <div ref={searchSectionRef}>

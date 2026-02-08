@@ -35,14 +35,9 @@ export function HeaderUserMenu({ session }: HeaderUserMenuProps) {
             Owner sign in
           </Link>
         ) : (
-          <>
-            <Link href="/search" className="text-slate-700 hover:text-slate-900">
-              Search
-            </Link>
-            <Link href="/signin" className="text-slate-700 hover:text-slate-900">
-              Sign in
-            </Link>
-          </>
+          <Link href="/signin" className="text-slate-700 hover:text-slate-900">
+            Sign in
+          </Link>
         )}
       </>
     );
@@ -120,14 +115,6 @@ export function HeaderUserMenu({ session }: HeaderUserMenuProps) {
                 onClick={() => setOpen(false)}
               >
                 Dashboard
-              </Link>
-              <Link
-                href="/search"
-                className="block rounded-xl px-3 py-2 text-slate-700 hover:bg-sand-100"
-                role="menuitem"
-                onClick={() => setOpen(false)}
-              >
-                Practice
               </Link>
               {user.role === "OWNER" && (
                 <Link

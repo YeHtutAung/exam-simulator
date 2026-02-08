@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { AnswerToggle } from "@/components/AnswerToggle";
 import { QuestionMCQInlinePractice } from "@/components/QuestionMCQInlinePractice";
+import { PageHeader } from "@/components/PageHeader";
 
 type QuestionPageProps = {
   params: Promise<{ questionId: string }>;
@@ -30,6 +31,7 @@ export default async function QuestionPage({ params }: QuestionPageProps) {
 
   return (
     <div className="space-y-6">
+      <PageHeader title={`Question ${question.questionNo}`} fallbackHref="/search" />
       <div className="flex flex-wrap items-center gap-2 text-xs uppercase text-slate-500">
         <Link href={`/exams/${question.examId}`} className="font-semibold text-accent">
           {question.exam.session} {question.exam.paper}

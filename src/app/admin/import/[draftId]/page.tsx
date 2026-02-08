@@ -25,7 +25,7 @@ export default async function ImportDraftDetailPage({
   if (!response.ok) {
     return (
       <div className="space-y-4">
-        <PageHeader title="Import draft" fallbackHref="/owner/import" />
+        <PageHeader title="Import draft" fallbackHref="/owner/import" eyebrow="Owner Portal" />
         <div className="rounded-2xl border border-sand-300 bg-white p-6 text-sm text-slate-600">
           Draft not found.
         </div>
