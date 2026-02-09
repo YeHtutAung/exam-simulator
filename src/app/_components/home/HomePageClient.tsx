@@ -5,6 +5,7 @@ import type { RefObject } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { ReportPreviewCard } from "./ReportPreviewCard";
 
 type ExamSummary = {
   id: string;
@@ -42,40 +43,6 @@ const seasonColors = {
   autumn: { accent: "#4F7DFF", soft: "rgba(79, 125, 255, 0.18)" },
   winter: { accent: "#7B61FF", soft: "rgba(123, 97, 255, 0.18)" },
 };
-
-function HeroIllustration() {
-  return (
-    <svg
-      viewBox="0 0 520 420"
-      role="img"
-      aria-label="Focused practice illustration"
-      className="h-full w-full"
-    >
-      <defs>
-        <linearGradient id="hero-gradient" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#EEF0FF" />
-          <stop offset="100%" stopColor="#F7EDE2" />
-        </linearGradient>
-        <linearGradient id="hero-accent" x1="0" y1="1" x2="1" y2="0">
-          <stop offset="0%" stopColor="#7B61FF" />
-          <stop offset="100%" stopColor="#4F7DFF" />
-        </linearGradient>
-      </defs>
-      <rect x="24" y="24" width="472" height="372" rx="32" fill="url(#hero-gradient)" />
-      <rect x="70" y="78" width="210" height="40" rx="12" fill="#fff" />
-      <rect x="70" y="140" width="260" height="140" rx="18" fill="#fff" />
-      <rect x="90" y="165" width="170" height="12" rx="6" fill="#DDE3F8" />
-      <rect x="90" y="190" width="130" height="12" rx="6" fill="#E8DBF7" />
-      <rect x="90" y="215" width="190" height="12" rx="6" fill="#DDE3F8" />
-      <rect x="70" y="298" width="160" height="32" rx="16" fill="url(#hero-accent)" />
-      <circle cx="360" cy="160" r="68" fill="#fff" />
-      <circle cx="360" cy="160" r="44" fill="#7B61FF" opacity="0.15" />
-      <rect x="312" y="260" width="140" height="88" rx="20" fill="#fff" />
-      <rect x="330" y="286" width="104" height="10" rx="5" fill="#E3E7FB" />
-      <rect x="330" y="308" width="76" height="10" rx="5" fill="#E3E7FB" />
-    </svg>
-  );
-}
 
 function HeroSection({
   onPrimaryCta,
@@ -133,7 +100,7 @@ function HeroSection({
           <p className="text-xs text-slate-500">{t("hero.hint")}</p>
         </div>
         <div className="rounded-2xl border border-sand-200 bg-sand p-4">
-          <HeroIllustration />
+          <ReportPreviewCard />
         </div>
       </div>
     </section>

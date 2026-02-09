@@ -65,6 +65,20 @@
       "browseAll": "Browse all questions",
       "start": "Start",
       "empty": "No exams yet. Add one in the admin dashboard."
+    },
+    "reportPreview": {
+      "title": "Summary report (preview)",
+      "afterSignup": "After free signup",
+      "caption": "See your score and weak topics after every attempt.",
+      "overallScore": "Overall score",
+      "recentAttempt": "Based on recent attempt",
+      "accuracyByTopic": "Accuracy by topic",
+      "attemptsLast7Days": "Attempts (last 7 days)"
+    },
+    "topics": {
+      "networking": "Networking",
+      "database": "Database",
+      "os": "OS"
     }
   },
   "dashboard": {
