@@ -1,0 +1,132 @@
+{
+  "common": {
+    "search": "Search",
+    "exams": "Exams",
+    "questions": "Questions",
+    "users": "Users",
+    "dashboard": "Dashboard",
+    "ownerPortal": "Owner portal",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "start": "Start"
+  },
+  "header": {
+    "ownerSignIn": "Owner sign in",
+    "search": "Search",
+    "adminOwner": "Admin/Owner",
+    "languageLabel": "Language"
+  },
+  "home": {
+    "hero": {
+      "label": "Focused practice",
+      "title": "Pass the FE exam with a realistic simulator",
+      "subtitle": "Practice with real-style questions, timed exam modes, and detailed performance reports—so you know exactly when you're ready.",
+      "bullet1": "Timed exam and practice modes",
+      "bullet2": "Instant scoring and accuracy by topic (after free signup)",
+      "bullet3": "Attempt history with summary reports",
+      "ctaPrimary": "Start free FE simulation",
+      "ctaSecondarySignedIn": "Go to dashboard",
+      "ctaSecondarySignedOut": "Sign in",
+      "hint": "No credit card · Quick signup"
+    },
+    "dashboardPreview": {
+      "eyebrow": "What you unlock after signup",
+      "title": "Track progress with real feedback",
+      "subtitle": "See detailed scores and accuracy after every attempt.",
+      "card1Title": "Score & accuracy",
+      "card1Detail": "Instant score breakdown",
+      "card2Title": "Weak-topic analysis",
+      "card2Detail": "Know what to study next",
+      "card3Title": "Attempt history",
+      "card3Detail": "Review every session"
+    },
+    "search": {
+      "label": "Search questions",
+      "placeholder": "Search questions by keyword or topic...",
+      "button": "Search",
+      "try": "Try: TCP/IP, データベース, OS",
+      "examLabel": "Exam",
+      "allExams": "All exams"
+    },
+    "notice": "Quick practice works without sign-in. Full reports, history, and accuracy tracking require free registration.",
+    "quickStart": {
+      "title": "Practice now",
+      "subtitle": "Shortcuts to help you start immediately.",
+      "item1Title": "Simulate a real FE exam",
+      "item1Desc": "Timed, scored, analyzed with real-style questions.",
+      "item2Title": "Practice weak topics",
+      "item2Desc": "Personalized focus areas (after signup).",
+      "item3Title": "Track your progress",
+      "item3Desc": "Attempt history & summary reports (after signup).",
+      "itemCta": "Start ->"
+    },
+    "exams": {
+      "title": "Exams",
+      "browseAll": "Browse all questions",
+      "start": "Start",
+      "empty": "No exams yet. Add one in the admin dashboard."
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back",
+    "subtitle": "Track your progress and focus areas.",
+    "keepPracticing": "Keep practicing",
+    "attempts": "Attempts",
+    "accuracy": "Accuracy",
+    "correct": "Correct",
+    "avgScore": "Avg score",
+    "recentAttempts": "Recent attempts",
+    "practiceSession": "Practice session",
+    "inProgress": "In progress",
+    "scoreLabel": "Score",
+    "noAttempts": "No attempts yet.",
+    "suggestions": "Suggestions",
+    "accuracyLabel": "accuracy",
+    "wrongAnswered": "{wrong} wrong / {total} answered",
+    "practice": "Practice",
+    "suggestionsEmpty": "Complete more practice to get personalized suggestions.",
+    "report": "Report",
+    "comingSoon": "Coming soon."
+  },
+  "admin": {
+    "exams": "Exams",
+    "questions": "Questions",
+    "users": "Users",
+    "newExam": "New exam",
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "owner": {
+    "portalLabel": "Owner Portal",
+    "dashboardTitle": "Dashboard",
+    "dashboardSubtitle": "Manage exams, questions, users, and imports.",
+    "manageExams": "Manage Exams",
+    "manageExamsDesc": "Create, edit, and remove exams.",
+    "manageQuestions": "Manage Questions",
+    "manageQuestionsDesc": "Browse and update questions.",
+    "manageUsers": "Manage Users",
+    "manageUsersDesc": "Roles, status, and access.",
+    "quickLinks": "Quick links",
+    "exams": "Exams",
+    "users": "Users",
+    "importDrafts": "Import drafts",
+    "questionsTitle": "Questions",
+    "questionsSubtitle": "Select an exam to manage its questions.",
+    "manageQuestionsLink": "Manage questions",
+    "noExams": "No exams yet.",
+    "signInTitle": "Sign in as Owner",
+    "signInSubtitle": "Restricted access for application owners."
+  },
+  "search": {
+    "title": "Search questions",
+    "subtitle": "Search by keyword in the question stem and optionally filter by exam.",
+    "placeholder": "Example: TCP/IP, SQL, セキュリティ...",
+    "allExams": "All exams",
+    "button": "Search",
+    "emptyPrompt": "Enter a keyword to start searching.",
+    "results": "Found {count} result(s){querySuffix}.",
+    "resultsSuffix": " for \"{query}\"",
+    "noResults": "No results. Try another keyword."
+  }
+}

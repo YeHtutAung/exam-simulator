@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 
 type SearchPageProps = {
@@ -9,6 +10,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
   const query = resolvedSearchParams.query?.trim() ?? "";
   const examId = resolvedSearchParams.examId ?? "";
+  const t = await getTranslations("search");
 
   const exams = await prisma.exam.findMany({ orderBy: { createdAt: "desc" } });
 
@@ -28,17 +30,15 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Search questions</h1>
-        <p className="text-sm text-slate-600">
-          Search by keyword in the question stem and optionally filter by exam.
-        </p>
+        <h1 className="text-2xl font-semibold">{t("title")}</h1>
+        <p className="text-sm text-slate-600">{t("subtitle")}</p>
       </div>
 
       <form action="/exam-runner" method="get" className="grid gap-4 md:grid-cols-[1fr_1fr_auto]">
         <input
           name="query"
           defaultValue={query}
-          placeholder="例: TCP/IP, SQL, セキュリティ..."
+          placeholder={t("placeholder")}
           className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2 text-sm"
         />
         <select
@@ -46,7 +46,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           defaultValue={examId}
           className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2 text-sm"
         >
-          <option value="">All exams</option>
+          <option value="">{t("allExams")}</option>
           {exams.map((exam) => (
             <option key={exam.id} value={exam.id}>
               {exam.session} {exam.paper} - {exam.title}
@@ -57,21 +57,23 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           type="submit"
           className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-white hover:bg-accent-strong"
         >
-          Search
+          {t("button")}
         </button>
       </form>
 
       {!hasSearch && (
         <div className="rounded-2xl border border-dashed border-sand-300 bg-white p-6 text-sm text-slate-500">
-          Enter a keyword to start searching.
+          {t("emptyPrompt")}
         </div>
       )}
 
       {hasSearch && (
         <div className="space-y-3">
           <p className="text-sm text-slate-600">
-            Found {questions.length} result{questions.length === 1 ? "" : "s"}
-            {query ? ` for "${query}"` : ""}.
+            {t("results", {
+              count: questions.length,
+              querySuffix: query ? t("resultsSuffix", { query }) : "",
+            })}
           </p>
           {questions.map((question) => (
             <Link
@@ -95,7 +97,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           ))}
           {questions.length === 0 && (
             <div className="rounded-2xl border border-dashed border-sand-300 bg-white p-6 text-sm text-slate-500">
-              No results. Try another keyword.
+              {t("noResults")}
             </div>
           )}
         </div>

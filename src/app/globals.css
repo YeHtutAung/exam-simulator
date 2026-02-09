@@ -12,7 +12,7 @@
 body {
   background: var(--sand);
   color: var(--ink);
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family: var(--font-sans), var(--font-myanmar), system-ui, sans-serif;
 }
 
 .dark {

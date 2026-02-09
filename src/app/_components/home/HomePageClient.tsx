@@ -4,6 +4,7 @@ import { useRef } from "react";
 import type { RefObject } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 type ExamSummary = {
   id: string;
@@ -85,32 +86,32 @@ function HeroSection({
   onSecondaryCta: () => void;
   isAuthenticated: boolean;
 }) {
+  const t = useTranslations("home");
   return (
     <section className="rounded-3xl border border-sand-200 bg-white p-8 shadow-sm">
       <div className="grid gap-8 md:grid-cols-[1.2fr_1fr] md:items-center">
         <div className="space-y-5">
           <span className="inline-flex w-fit items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
-            Focused practice
+            {t("hero.label")}
           </span>
           <h1 className="text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">
-            Pass the FE exam with a realistic simulator
+            {t("hero.title")}
           </h1>
           <p className="max-w-xl text-sm text-slate-600 md:text-base">
-            Practice with real-style questions, timed exam modes, and detailed
-            performance reports—so you know exactly when you&apos;re ready.
+            {t("hero.subtitle")}
           </p>
           <ul className="space-y-2 text-sm text-slate-700">
             <li className="flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-[#1F2937]" />
-              Timed exam and practice modes
+              {t("hero.bullet1")}
             </li>
             <li className="flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-[#1F2937]" />
-              Instant scoring and accuracy by topic (after free signup)
+              {t("hero.bullet2")}
             </li>
             <li className="flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-[#1F2937]" />
-              Attempt history with summary reports
+              {t("hero.bullet3")}
             </li>
           </ul>
           <div className="flex flex-wrap items-center gap-3">
@@ -119,17 +120,17 @@ function HeroSection({
               onClick={onPrimaryCta}
               className="rounded-full bg-[#1F2937] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#111827] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1F2937]"
             >
-              Start free FE simulation
+              {t("hero.ctaPrimary")}
             </button>
             <button
               type="button"
               onClick={onSecondaryCta}
               className="rounded-full border border-sand-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1F2937]"
             >
-              {isAuthenticated ? "Go to dashboard" : "Sign in"}
+              {isAuthenticated ? t("hero.ctaSecondarySignedIn") : t("hero.ctaSecondarySignedOut")}
             </button>
           </div>
-          <p className="text-xs text-slate-500">No credit card · Quick signup</p>
+          <p className="text-xs text-slate-500">{t("hero.hint")}</p>
         </div>
         <div className="rounded-2xl border border-sand-200 bg-sand p-4">
           <HeroIllustration />
@@ -140,26 +141,28 @@ function HeroSection({
 }
 
 function DashboardPreview() {
+  const t = useTranslations("home");
+  const cards = [
+    { title: t("dashboardPreview.card1Title"), detail: t("dashboardPreview.card1Detail") },
+    { title: t("dashboardPreview.card2Title"), detail: t("dashboardPreview.card2Detail") },
+    { title: t("dashboardPreview.card3Title"), detail: t("dashboardPreview.card3Detail") },
+  ];
   return (
     <section className="rounded-3xl border border-sand-200 bg-white p-8 shadow-sm">
       <div className="space-y-5">
         <div>
           <p className="text-xs font-semibold uppercase text-slate-500">
-            What you unlock after signup
+            {t("dashboardPreview.eyebrow")}
           </p>
           <h2 className="mt-2 text-2xl font-semibold text-slate-900">
-            Track progress with real feedback
+            {t("dashboardPreview.title")}
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-slate-600">
-            See detailed scores and accuracy after every attempt.
+            {t("dashboardPreview.subtitle")}
           </p>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
-          {[
-            { title: "Score & accuracy", detail: "Instant score breakdown" },
-            { title: "Weak-topic analysis", detail: "Know what to study next" },
-            { title: "Attempt history", detail: "Review every session" },
-          ].map((card) => (
+          {cards.map((card) => (
             <div
               key={card.title}
               className="rounded-2xl border border-sand-200 bg-sand-100/60 p-4"
@@ -185,6 +188,7 @@ function CommandSearch({
   exams: ExamSummary[];
   inputRef: RefObject<HTMLInputElement>;
 }) {
+  const t = useTranslations("home");
   return (
     <section
       id="command-search"
@@ -207,35 +211,35 @@ function CommandSearch({
             />
           </svg>
           <label htmlFor="home-search-input" className="sr-only">
-            Search questions
+            {t("search.label")}
           </label>
           <input
             id="home-search-input"
             ref={inputRef}
             name="query"
-            placeholder="Search questions by keyword or topic..."
+            placeholder={t("search.placeholder")}
             className="min-w-[220px] flex-1 bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400 md:text-base"
-            aria-label="Search questions by keyword or topic"
+            aria-label={t("search.placeholder")}
           />
           <button
             type="submit"
             className="rounded-full bg-[#1F2937] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#111827] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1F2937]"
           >
-            Search
+            {t("search.button")}
           </button>
         </div>
         <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
-          <span>Try: TCP/IP, データベース, OS</span>
+          <span>{t("search.try")}</span>
           <div className="flex items-center gap-2">
             <label htmlFor="exam-select" className="text-xs font-semibold text-slate-500">
-              Exam
+              {t("search.examLabel")}
             </label>
             <select
               id="exam-select"
               name="examId"
               className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700"
             >
-              <option value="">All exams</option>
+              <option value="">{t("search.allExams")}</option>
               {exams.map((exam) => (
                 <option key={exam.id} value={exam.id}>
                   {exam.session} {exam.paper} - {exam.title}
@@ -250,24 +254,25 @@ function CommandSearch({
 }
 
 function QuickStart() {
+  const t = useTranslations("home");
   const items = [
     {
-      title: "Simulate a real FE exam",
-      description: "Timed, scored, analyzed with real-style questions.",
+      title: t("quickStart.item1Title"),
+      description: t("quickStart.item1Desc"),
       href: "/exam-runner?mode=latest",
       accent: "#4F7DFF",
       soft: "rgba(79, 125, 255, 0.16)",
     },
     {
-      title: "Practice weak topics",
-      description: "Personalized focus areas (after signup).",
+      title: t("quickStart.item2Title"),
+      description: t("quickStart.item2Desc"),
       href: "/dashboard",
       accent: "#2BB673",
       soft: "rgba(43, 182, 115, 0.16)",
     },
     {
-      title: "Track your progress",
-      description: "Attempt history & summary reports (after signup).",
+      title: t("quickStart.item3Title"),
+      description: t("quickStart.item3Desc"),
       href: "/dashboard",
       accent: "#7B61FF",
       soft: "rgba(123, 97, 255, 0.16)",
@@ -277,10 +282,8 @@ function QuickStart() {
   return (
     <section className="space-y-4">
       <div>
-        <p className="text-sm font-semibold text-slate-900">Practice now</p>
-        <p className="text-xs text-slate-500">
-          Shortcuts to help you start immediately.
-        </p>
+        <p className="text-sm font-semibold text-slate-900">{t("quickStart.title")}</p>
+        <p className="text-xs text-slate-500">{t("quickStart.subtitle")}</p>
       </div>
       <div className="grid gap-4 md:grid-cols-3">
         {items.map((item) => (
@@ -295,7 +298,9 @@ function QuickStart() {
           >
             <p className="text-sm font-semibold text-slate-900">{item.title}</p>
             <p className="mt-2 text-xs text-slate-500">{item.description}</p>
-            <div className="mt-4 text-xs font-semibold text-slate-700">Start -&gt;</div>
+            <div className="mt-4 text-xs font-semibold text-slate-700">
+              {t("quickStart.itemCta")}
+            </div>
           </Link>
         ))}
       </div>
@@ -304,12 +309,13 @@ function QuickStart() {
 }
 
 function ExamsGrid({ exams }: { exams: ExamSummary[] }) {
+  const t = useTranslations("home");
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-slate-900">Exams</h2>
+        <h2 className="text-lg font-semibold text-slate-900">{t("exams.title")}</h2>
         <Link href="/search" className="text-xs font-semibold text-slate-700">
-          Browse all questions
+          {t("exams.browseAll")}
         </Link>
       </div>
       <div className="grid gap-4 md:grid-cols-3">
@@ -351,7 +357,7 @@ function ExamsGrid({ exams }: { exams: ExamSummary[] }) {
               <div className="mt-6 flex items-center justify-between text-xs text-slate-500">
                 <span>{exam.language}</span>
                 <span className="rounded-full border border-slate-200 px-3 py-1 text-[11px] font-semibold text-slate-700">
-                  Start
+                  {t("exams.start")}
                 </span>
               </div>
             </Link>
@@ -359,7 +365,7 @@ function ExamsGrid({ exams }: { exams: ExamSummary[] }) {
         })}
         {exams.length === 0 && (
           <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-6 text-sm text-slate-500">
-            No exams yet. Add one in the admin dashboard.
+            {t("exams.empty")}
           </div>
         )}
       </div>
@@ -368,6 +374,7 @@ function ExamsGrid({ exams }: { exams: ExamSummary[] }) {
 }
 
 export function HomePageClient({ exams, isAuthenticated }: HomePageClientProps) {
+  const t = useTranslations("home");
   const inputRef = useRef<HTMLInputElement>(null);
   const searchSectionRef = useRef<HTMLElement>(null);
   const router = useRouter();
@@ -393,8 +400,7 @@ export function HomePageClient({ exams, isAuthenticated }: HomePageClientProps) 
           <CommandSearch exams={exams} inputRef={inputRef} />
         </div>
         <div className="rounded-2xl border border-sand-200 bg-white/70 px-4 py-3 text-xs text-slate-600">
-          Quick practice works without sign-in. Full reports, history, and accuracy tracking
-          require free registration.
+          {t("notice")}
         </div>
         <QuickStart />
         <ExamsGrid exams={exams} />

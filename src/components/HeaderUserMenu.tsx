@@ -5,6 +5,7 @@ import Link from "next/link";
 import { signOut } from "next-auth/react";
 import type { Session } from "next-auth";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 type HeaderUserMenuProps = {
   session: Session | null;
@@ -26,17 +27,19 @@ export function HeaderUserMenu({ session }: HeaderUserMenuProps) {
   const initials = useMemo(() => getInitials(user?.name, user?.email), [user?.name, user?.email]);
   const pathname = usePathname();
   const isOwnerRoute = pathname.startsWith("/owner");
+  const tCommon = useTranslations("common");
+  const tHeader = useTranslations("header");
 
   if (!user) {
     return (
       <>
         {isOwnerRoute ? (
           <Link href="/owner/signin" className="text-slate-700 hover:text-slate-900">
-            Owner sign in
+            {tHeader("ownerSignIn")}
           </Link>
         ) : (
           <Link href="/signin" className="text-slate-700 hover:text-slate-900">
-            Sign in
+            {tCommon("signIn")}
           </Link>
         )}
       </>
@@ -79,7 +82,7 @@ export function HeaderUserMenu({ session }: HeaderUserMenuProps) {
                 role="menuitem"
                 onClick={() => setOpen(false)}
               >
-                Dashboard
+                {tCommon("dashboard")}
               </Link>
               <Link
                 href="/owner/exams"
@@ -87,7 +90,7 @@ export function HeaderUserMenu({ session }: HeaderUserMenuProps) {
                 role="menuitem"
                 onClick={() => setOpen(false)}
               >
-                Exams
+                {tCommon("exams")}
               </Link>
               <Link
                 href="/owner/questions"
@@ -95,7 +98,7 @@ export function HeaderUserMenu({ session }: HeaderUserMenuProps) {
                 role="menuitem"
                 onClick={() => setOpen(false)}
               >
-                Questions
+                {tCommon("questions")}
               </Link>
               <Link
                 href="/owner/users"
@@ -103,7 +106,7 @@ export function HeaderUserMenu({ session }: HeaderUserMenuProps) {
                 role="menuitem"
                 onClick={() => setOpen(false)}
               >
-                Users
+                {tCommon("users")}
               </Link>
             </>
           ) : (
@@ -114,7 +117,7 @@ export function HeaderUserMenu({ session }: HeaderUserMenuProps) {
                 role="menuitem"
                 onClick={() => setOpen(false)}
               >
-                Dashboard
+                {tCommon("dashboard")}
               </Link>
               {user.role === "OWNER" && (
                 <Link
@@ -123,7 +126,7 @@ export function HeaderUserMenu({ session }: HeaderUserMenuProps) {
                   role="menuitem"
                   onClick={() => setOpen(false)}
                 >
-                  Owner portal
+                  {tCommon("ownerPortal")}
                 </Link>
               )}
             </>
@@ -134,7 +137,7 @@ export function HeaderUserMenu({ session }: HeaderUserMenuProps) {
             role="menuitem"
             onClick={() => signOut({ callbackUrl: "/" })}
           >
-            Sign out
+            {tCommon("signOut")}
           </button>
         </div>
       )}

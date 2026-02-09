@@ -66,6 +66,19 @@ npm run worker
 - `src/lib` - Prisma client, validators, helpers
 - `prisma` - schema and seed
 
+## Internationalization (i18n)
+Locale strategy: cookie-based (no URL prefixes). The selected locale is stored in `locale` cookie and applied app-wide via `next-intl`.
+
+### How to add a language
+1. Add the locale code to `src/i18n/config.ts`.
+2. Create `src/messages/{locale}.json` with the same keys as `en.json`.
+3. Update `src/components/LanguageToggle.tsx` if you want a custom label.
+
+### How to run and verify
+1. Start the app: `npm run dev`.
+2. Use the language toggle in the header.
+3. Refresh the page and confirm the language persists.
+
 ## Environment
 The local database URL is set in `.env`:
 ```
