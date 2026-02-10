@@ -2,7 +2,7 @@ import pdfParse from "pdf-parse";
 
 export type FeAnswer = "a" | "b" | "c" | "d";
 
-const ANSWER_REGEX = /\b(80|[1-7]\d|[1-9])\s*([abcd])\b/gi;
+const ANSWER_REGEX = /\b(\d{1,3})\s*([abcd])\b/gi;
 
 function normalizeText(input: string): string {
   return input
@@ -29,7 +29,7 @@ export async function parseFeAnswerPdf(
     const questionNo = Number(match[1]);
     const answer = match[2].toLowerCase() as FeAnswer;
 
-    if (questionNo < 1 || questionNo > 80) {
+    if (questionNo < 1) {
       continue;
     }
 
@@ -48,8 +48,14 @@ export async function parseFeAnswerPdf(
     mapping.set(questionNo, answer);
   }
 
+  if (mapping.size === 0) {
+    throw new Error("Answer PDF parse failed: no answers found.");
+  }
+
+  // Validate sequential coverage: 1..N with no gaps
+  const maxQ = Math.max(...mapping.keys());
   const missing: number[] = [];
-  for (let i = 1; i <= 80; i += 1) {
+  for (let i = 1; i <= maxQ; i += 1) {
     if (!mapping.has(i)) {
       missing.push(i);
     }
@@ -60,12 +66,6 @@ export async function parseFeAnswerPdf(
       `Answer PDF parse failed: missing answers for questions ${missing.join(
         ", "
       )}.`
-    );
-  }
-
-  if (mapping.size !== 80) {
-    throw new Error(
-      `Answer PDF parse failed: expected 80 answers, found ${mapping.size}.`
     );
   }
 

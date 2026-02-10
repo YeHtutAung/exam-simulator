@@ -91,7 +91,7 @@ async function mapQuestionPages(
     let match: RegExpExecArray | null;
     while ((match = QUESTION_MARKER.exec(normalized)) !== null) {
       const questionNo = Number(match[1]);
-      if (questionNo < 1 || questionNo > 80) {
+      if (questionNo < 1) {
         continue;
       }
       if (!pageMap.has(questionNo)) {
@@ -155,7 +155,7 @@ export async function parseFeQuestionPdf(
     const resultsMap = new Map<number, FeQuestion>();
 
     for (const { questionNo, chunk } of chunks) {
-      if (questionNo < 1 || questionNo > 80) {
+      if (questionNo < 1) {
         continue;
       }
 
@@ -199,8 +199,14 @@ export async function parseFeQuestionPdf(
 
     const results = Array.from(resultsMap.values());
 
+    if (results.length === 0) {
+      throw new Error("Question PDF parse failed: no questions found.");
+    }
+
+    // Validate sequential coverage: 1..N with no gaps
+    const maxQ = Math.max(...results.map((r) => r.questionNo));
     const missing: number[] = [];
-    for (let i = 1; i <= 80; i += 1) {
+    for (let i = 1; i <= maxQ; i += 1) {
       if (!results.find((item) => item.questionNo === i)) {
         missing.push(i);
       }
@@ -209,12 +215,6 @@ export async function parseFeQuestionPdf(
     if (missing.length > 0) {
       throw new Error(
         `Question PDF parse failed: missing questions ${missing.join(", ")}.`
-      );
-    }
-
-    if (results.length !== 80) {
-      throw new Error(
-        `Question PDF parse failed: expected 80 questions, found ${results.length}.`
       );
     }
 
