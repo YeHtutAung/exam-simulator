@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ExamRunnerQuestion } from "@/components/ExamRunnerQuestion";
 
@@ -357,6 +357,10 @@ export function ExamRunner({
     return () => window.removeEventListener("keydown", handleKey);
   }, [isSummaryOpen]);
 
+  const activePillRef = useCallback((node: HTMLButtonElement | null) => {
+    node?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+  }, [currentIndex]);
+
   const handleCloseSummary = () => {
     if (typeof window !== "undefined") {
       window.localStorage.removeItem(storageKey);
@@ -401,6 +405,33 @@ export function ExamRunner({
           </div>
         )}
       </header>
+
+      {/* Scrollable question number strip */}
+      <div className="overflow-x-auto py-3">
+        <div className="flex gap-1.5">
+          {questions.map((q, i) => {
+            const isActive = i === currentIndex;
+            const isAnswered = Boolean(answers[q.id]);
+            return (
+              <button
+                key={q.id}
+                ref={isActive ? activePillRef : undefined}
+                type="button"
+                onClick={() => setCurrentIndex(i)}
+                className={`shrink-0 h-8 w-8 rounded-full text-xs font-semibold transition ${
+                  isActive
+                    ? "bg-accent text-white"
+                    : isAnswered
+                      ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                      : "bg-sand-200 text-slate-600 hover:bg-sand-300"
+                }`}
+              >
+                {q.questionNo}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       <section className="flex-1 py-8">
         {currentQuestion ? (
