@@ -370,44 +370,41 @@ export function ExamRunner({
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-160px)] flex-col">
+    <div className="flex h-[calc(100vh-160px)] flex-col">
       {attemptError && (
-        <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div className="mb-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">
           {attemptError}
         </div>
       )}
-      {shouldPersist && (
-        <div className="mb-4 rounded-2xl border border-sand-300 bg-white px-4 py-3 text-xs text-slate-600">
-          <span className="font-semibold">Attempt status:</span>{" "}
-          {saveStatus === "saving"
-            ? "Saving answers..."
-            : saveStatus === "error"
-              ? "Save failed. Will retry."
-              : saveStatus === "saved"
-                ? `Saved${lastSavedAt ? ` at ${new Date(lastSavedAt).toLocaleTimeString()}` : ""}`
-                : "Ready"}
-        </div>
-      )}
-      <header className="flex flex-wrap items-start justify-between gap-3 border-b border-sand-300 pb-4">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold">{title}</h1>
-          <p className="text-sm text-slate-600">
-            Question {currentNumber} of {total}
-          </p>
-        </div>
+      <header className="shrink-0 flex items-center gap-4 border-b border-sand-300 pb-2 text-sm">
+        <h1 className="font-semibold">{title}</h1>
+        <span className="text-slate-500">
+          Question {currentNumber} of {total}
+        </span>
+        {shouldPersist && (
+          <span className="text-xs text-slate-400">
+            {saveStatus === "saving"
+              ? "Saving..."
+              : saveStatus === "error"
+                ? "Save failed"
+                : saveStatus === "saved"
+                  ? `Saved${lastSavedAt ? ` ${new Date(lastSavedAt).toLocaleTimeString()}` : ""}`
+                  : "Ready"}
+          </span>
+        )}
         {enableTimer && (
-          <div
-            className={`rounded-full border border-sand-300 bg-white px-4 py-2 text-sm font-semibold ${
+          <span
+            className={`ml-auto font-semibold ${
               !timeUp && remainingSeconds <= 20 * 60 ? "text-rose-600" : "text-slate-700"
             }`}
           >
             {timeUp ? "Time is up" : formatTime(remainingSeconds)}
-          </div>
+          </span>
         )}
       </header>
 
       {/* Scrollable question number strip */}
-      <div className="overflow-x-auto py-3">
+      <div className="shrink-0 overflow-x-auto py-3">
         <div className="flex gap-1.5">
           {questions.map((q, i) => {
             const isActive = i === currentIndex;
@@ -433,7 +430,7 @@ export function ExamRunner({
         </div>
       </div>
 
-      <section className="flex-1 py-8">
+      <section className="min-h-0 flex-1 py-4">
         {currentQuestion ? (
           <ExamRunnerQuestion
             key={currentQuestion.id}
@@ -449,7 +446,7 @@ export function ExamRunner({
         )}
       </section>
 
-      <nav className="sticky bottom-0 border-t border-sand-300 bg-sand py-4">
+      <nav className="shrink-0 border-t border-sand-300 bg-sand py-4">
         <div className="flex items-center justify-between">
           <button
             type="button"
