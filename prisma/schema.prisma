@@ -62,9 +62,10 @@ model User {
   updatedAt     DateTime     @updatedAt
   deletedAt     DateTime?
 
-  accounts  Account[]
-  sessions  Session[]
-  attempts  Attempt[]
+  accounts            Account[]
+  sessions            Session[]
+  attempts            Attempt[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Account {
