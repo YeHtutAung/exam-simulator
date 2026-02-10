@@ -8,6 +8,7 @@ import { parseFeAnswerPdf } from "../../lib/importer/feAnswerParser";
 import { parseFeQuestionPdf } from "../../lib/importer/feQuestionParser";
 import { renderPdfPagesToPng } from "../lib/importer/pdfPageRenderer";
 import { computeQuestionCrops, cropQuestionImages } from "../lib/importer/pdfQuestionCropper";
+import { getTopicForQuestion } from "../lib/topicMapping";
 
 const LOCK_TIMEOUT_MINUTES = 10;
 const POLL_INTERVAL_MS = 2000;
@@ -232,6 +233,7 @@ export async function processNextImportDraftOnce() {
               questionNo: question.questionNo,
               type: "MCQ_SINGLE",
               stem: question.stem,
+              topic: getTopicForQuestion(question.questionNo, questions.length),
               correctAnswer: answers[question.questionNo] ?? null,
               sourcePage: question.sourcePage ?? null,
               pageImageUrl: question.sourcePage

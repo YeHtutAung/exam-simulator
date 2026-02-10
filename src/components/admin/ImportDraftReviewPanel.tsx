@@ -65,6 +65,7 @@ export function ImportDraftReviewPanel({ initial }: { initial: DraftResponse }) 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkTopic, setBulkTopic] = useState("");
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [autoTopicLoading, setAutoTopicLoading] = useState(false);
 
   const toggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => {
@@ -82,6 +83,24 @@ export function ImportDraftReviewPanel({ initial }: { initial: DraftResponse }) 
         : new Set(draft.questions.map((q) => q.id))
     );
   }, [draft.questions]);
+
+  const handleAutoTopic = useCallback(async () => {
+    setAutoTopicLoading(true);
+    const response = await fetch(
+      `/api/admin/import/${draft.id}/questions/auto-topic`,
+      { method: "POST" },
+    );
+    if (response.ok) {
+      const refreshRes = await fetch(`/api/admin/import/${draft.id}`, {
+        cache: "no-store",
+      });
+      if (refreshRes.ok) {
+        const data = (await refreshRes.json()) as DraftResponse;
+        setDraft(data);
+      }
+    }
+    setAutoTopicLoading(false);
+  }, [draft.id]);
 
   const handleBulkAssign = useCallback(async () => {
     if (!bulkTopic || selectedIds.size === 0) return;
@@ -155,6 +174,13 @@ export function ImportDraftReviewPanel({ initial }: { initial: DraftResponse }) 
           <Link href="/admin/import" className="text-sm font-semibold text-accent">
             New import
           </Link>
+          <button
+            onClick={handleAutoTopic}
+            disabled={autoTopicLoading || draft.status === "PUBLISHED"}
+            className="rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-white hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {autoTopicLoading ? "Detecting..." : "Auto-detect topics"}
+          </button>
           <PublishDraftButton
             draftId={draft.id}
             status={draft.status}
