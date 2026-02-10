@@ -168,6 +168,7 @@
     "resultsSuffix": " for \"{query}\"",
     "noResults": "No results. Try another keyword.",
     "allTopics": "All topics",
-    "practiceNow": "Practice now"
+    "practiceNow": "Practice now",
+    "selectExam": "Please select an exam first"
   }
 }

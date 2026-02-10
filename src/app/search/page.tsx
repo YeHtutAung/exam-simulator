@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
+import SearchForm from "@/components/search/SearchForm";
 
 const TOPIC_PRESETS = [
   "Discrete Math",
@@ -20,29 +21,26 @@ const TOPIC_PRESETS = [
 ];
 
 type SearchPageProps = {
-  searchParams?: Promise<{ query?: string; examId?: string; topic?: string }>;
+  searchParams?: Promise<{ examId?: string; topic?: string }>;
 };
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
-  const query = resolvedSearchParams.query?.trim() ?? "";
   const examId = resolvedSearchParams.examId ?? "";
   const topic = resolvedSearchParams.topic?.trim() ?? "";
   const t = await getTranslations("search");
 
   const exams = await prisma.exam.findMany({ orderBy: { createdAt: "desc" } });
 
-  const hasSearch = Boolean(query || examId || topic);
+  const hasSearch = Boolean(examId || topic);
   const questions = hasSearch
     ? await prisma.question.findMany({
         where: {
-          ...(query ? { stem: { contains: query, mode: "insensitive" } } : {}),
           ...(examId ? { examId } : {}),
           ...(topic ? { topic } : {}),
         },
         include: { exam: true },
         orderBy: { questionNo: "asc" },
-        take: 50,
       })
     : [];
 
@@ -53,44 +51,19 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         <p className="text-sm text-slate-600">{t("subtitle")}</p>
       </div>
 
-      <form action="/search" method="get" className="grid gap-4 md:grid-cols-[1fr_1fr_1fr_auto]">
-        <input
-          name="query"
-          defaultValue={query}
-          placeholder={t("placeholder")}
-          className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2 text-sm"
-        />
-        <select
-          name="examId"
-          defaultValue={examId}
-          className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2 text-sm"
-        >
-          <option value="">{t("allExams")}</option>
-          {exams.map((exam) => (
-            <option key={exam.id} value={exam.id}>
-              {exam.session} {exam.paper} - {exam.title}
-            </option>
-          ))}
-        </select>
-        <select
-          name="topic"
-          defaultValue={topic}
-          className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2 text-sm"
-        >
-          <option value="">{t("allTopics")}</option>
-          {TOPIC_PRESETS.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
-        <button
-          type="submit"
-          className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-white hover:bg-accent-strong"
-        >
-          {t("button")}
-        </button>
-      </form>
+      <SearchForm
+        exams={exams.map((e) => ({ id: e.id, session: e.session, paper: e.paper, title: e.title }))}
+        defaultExamId={examId}
+        defaultTopic={topic}
+        topics={TOPIC_PRESETS}
+        labels={{
+          allExams: t("allExams"),
+          allTopics: t("allTopics"),
+          search: t("button"),
+          practiceNow: t("practiceNow"),
+          selectExam: t("selectExam"),
+        }}
+      />
 
       {!hasSearch && (
         <div className="rounded-2xl border border-dashed border-sand-300 bg-white p-6 text-sm text-slate-500">
@@ -103,7 +76,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           <p className="text-sm text-slate-600">
             {t("results", {
               count: questions.length,
-              querySuffix: query ? t("resultsSuffix", { query }) : "",
+              querySuffix: "",
             })}
           </p>
           {questions.map((question) => (
@@ -136,16 +109,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           {questions.length === 0 && (
             <div className="rounded-2xl border border-dashed border-sand-300 bg-white p-6 text-sm text-slate-500">
               {t("noResults")}
-            </div>
-          )}
-          {questions.length > 0 && examId && (
-            <div className="pt-2">
-              <Link
-                href={`/exam-runner?examId=${examId}`}
-                className="inline-block rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-white hover:bg-accent-strong"
-              >
-                {t("practiceNow")}
-              </Link>
             </div>
           )}
         </div>
