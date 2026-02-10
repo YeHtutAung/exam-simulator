@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import type { Session } from "next-auth";
@@ -56,9 +57,11 @@ export function HeaderUserMenu({ session }: HeaderUserMenuProps) {
         aria-expanded={open}
       >
         {user.image ? (
-          <img
+          <Image
             src={user.image}
             alt={user.name ?? "User"}
+            width={28}
+            height={28}
             className="h-7 w-7 rounded-full border border-sand-200 object-cover"
           />
         ) : (
