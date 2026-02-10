@@ -41,7 +41,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           ...(topic ? { topic } : {}),
         },
         include: { exam: true },
-        orderBy: { createdAt: "desc" },
+        orderBy: { questionNo: "asc" },
         take: 50,
       })
     : [];
@@ -136,6 +136,16 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           {questions.length === 0 && (
             <div className="rounded-2xl border border-dashed border-sand-300 bg-white p-6 text-sm text-slate-500">
               {t("noResults")}
+            </div>
+          )}
+          {questions.length > 0 && examId && (
+            <div className="pt-2">
+              <Link
+                href={`/exam-runner?examId=${examId}`}
+                className="inline-block rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-white hover:bg-accent-strong"
+              >
+                {t("practiceNow")}
+              </Link>
             </div>
           )}
         </div>

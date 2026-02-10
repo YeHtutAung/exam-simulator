@@ -167,6 +167,7 @@
     "results": "Found {count} result(s){querySuffix}.",
     "resultsSuffix": " for \"{query}\"",
     "noResults": "No results. Try another keyword.",
-    "allTopics": "All topics"
+    "allTopics": "All topics",
+    "practiceNow": "Practice now"
   }
 }

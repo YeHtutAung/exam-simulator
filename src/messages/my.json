@@ -167,6 +167,7 @@
     "results": "ရလဒ် {count} ခု တွေ့ရှိ{querySuffix}။",
     "resultsSuffix": " \"{query}\" အတွက်",
     "noResults": "ရလဒ် မတွေ့ပါ။ စကားလုံးအသစ် စမ်းကြည့်ပါ။",
-    "allTopics": "ခေါင်းစဉ်အားလုံး"
+    "allTopics": "ခေါင်းစဉ်အားလုံး",
+    "practiceNow": "ယခု လေ့ကျင့်ရန်"
   }
 }
