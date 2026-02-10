@@ -21,6 +21,7 @@ type Trends = {
 
 type SuggestionResult = {
   weakTopics: WeakTopic[];
+  allTopics: WeakTopic[];
   suggestedActions: SuggestedAction[];
   trends?: Trends;
 };
@@ -98,7 +99,7 @@ export async function getSuggestionsForUser(userId: string, attemptWindow = DEFA
   });
 
   if (attempts.length === 0) {
-    return { weakTopics: [], suggestedActions: [] };
+    return { weakTopics: [], allTopics: [], suggestedActions: [] };
   }
 
   const attemptIds = attempts.map((attempt) => attempt.id);
@@ -123,12 +124,13 @@ export async function getSuggestionsForUser(userId: string, attemptWindow = DEFA
     },
   });
 
-  const weakTopics = computeWeakTopics(
-    answers.map((answer) => ({
-      isCorrect: answer.isCorrect,
-      question: answer.question as QuestionWithMeta,
-    }))
-  );
+  const answerData = answers.map((answer) => ({
+    isCorrect: answer.isCorrect,
+    question: answer.question as QuestionWithMeta,
+  }));
+
+  const weakTopics = computeWeakTopics(answerData);
+  const allTopics = computeWeakTopics(answerData, 1, Infinity);
 
   const suggestedActions: SuggestedAction[] = weakTopics.map((topic) => ({
     label: `Practice ${topic.topic}`,
@@ -146,6 +148,7 @@ export async function getSuggestionsForUser(userId: string, attemptWindow = DEFA
 
   return {
     weakTopics,
+    allTopics,
     suggestedActions,
     trends,
   };

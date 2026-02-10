@@ -149,13 +149,13 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Weak Topics */}
+        {/* Topic Performance */}
         <div className="space-y-4">
           <div className="rounded-2xl border border-sand-300 bg-white p-6">
-            <h2 className="mb-4 text-sm font-semibold">{t("weakTopics")}</h2>
-            {suggestions.weakTopics.length > 0 ? (
+            <h2 className="mb-4 text-sm font-semibold">{t("topicPerformance")}</h2>
+            {suggestions.allTopics.length > 0 ? (
               <div className="space-y-4">
-                {suggestions.weakTopics.map((topic) => (
+                {suggestions.allTopics.map((topic) => (
                   <TopicProgressBar
                     key={topic.topic}
                     topic={topic.topic}

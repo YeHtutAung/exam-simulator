@@ -47,12 +47,13 @@ export async function getUserDashboard(userId: string) {
 
   let suggestions = {
     weakTopics: [],
+    allTopics: [],
     suggestedActions: [],
   } as Awaited<ReturnType<typeof getSuggestionsForUser>>;
   try {
     suggestions = await getSuggestionsForUser(userId);
   } catch {
-    suggestions = { weakTopics: [], suggestedActions: [] };
+    suggestions = { weakTopics: [], allTopics: [], suggestedActions: [] };
   }
 
   return {
