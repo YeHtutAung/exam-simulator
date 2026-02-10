@@ -119,6 +119,7 @@ export async function POST(_request: Request, { params }: Params) {
           correctAnswer: draftQuestion.correctAnswer ?? "a",
           explanation: null,
           sourcePage: draftQuestion.sourcePage ? String(draftQuestion.sourcePage) : null,
+          topic: draftQuestion.topic ?? null,
         },
       });
 

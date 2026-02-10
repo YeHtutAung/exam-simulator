@@ -9,6 +9,23 @@ import {
   ImportDraftQuestionInput,
 } from "@/lib/validators/importDraftQuestion";
 
+const TOPIC_PRESETS = [
+  "Discrete Math",
+  "Data Structures & Algorithms",
+  "Computer Hardware",
+  "Software",
+  "Database",
+  "Networking",
+  "Security",
+  "System Development",
+  "Project Management",
+  "Service Management",
+  "Business Strategy",
+  "Pseudo Code",
+  "Programming",
+  "Spreadsheet",
+];
+
 type ImportDraftQuestionFormProps = {
   draftId: string;
   questionId: string;
@@ -130,6 +147,21 @@ export function ImportDraftQuestionForm({
           </label>
         </div>
       )}
+
+      <label className="space-y-1 text-sm">
+        <span className="font-medium">Topic</span>
+        <select
+          {...register("topic")}
+          className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2"
+        >
+          <option value="">No topic</option>
+          {TOPIC_PRESETS.map((t) => (
+            <option key={t} value={t}>
+              {t}
+            </option>
+          ))}
+        </select>
+      </label>
 
       <fieldset className="space-y-2 text-sm">
         <legend className="font-medium">Correct Answer</legend>

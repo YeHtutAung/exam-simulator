@@ -3,6 +3,7 @@ import { z } from "zod";
 export const importDraftQuestionSchema = z.object({
   stem: z.string().min(1, "Stem is required."),
   correctAnswer: z.enum(["a", "b", "c", "d"]),
+  topic: z.string().optional(),
   choices: z.object({
     a: z.string().min(1, "Choice A is required."),
     b: z.string().min(1, "Choice B is required."),

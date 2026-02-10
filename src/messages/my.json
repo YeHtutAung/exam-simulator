@@ -78,7 +78,19 @@
     "topics": {
       "networking": "ကွန်ယက်",
       "database": "ဒေတာဘေ့စ်",
-      "os": "OS"
+      "os": "OS",
+      "discreteMath": "ကိန်းသေ သင်္ချာ",
+      "dataStructures": "ဒေတာဖွဲ့စည်းပုံနှင့် အယ်ဂိုရီသမ်",
+      "computerHardware": "ကွန်ပျူတာ ဟာ့ဒ်ဝဲ",
+      "software": "ဆော့ဖ်ဝဲ",
+      "security": "လုံခြုံရေး",
+      "systemDevelopment": "စနစ် ဖွံ့ဖြိုးတိုးတက်မှု",
+      "projectManagement": "ပရောဂျက် စီမံခန့်ခွဲမှု",
+      "serviceManagement": "ဝန်ဆောင်မှု စီမံခန့်ခွဲမှု",
+      "businessStrategy": "စီးပွားရေး မဟာဗျူဟာ",
+      "pseudoCode": "ဆူဒိုကုဒ်",
+      "programming": "ပရိုဂရမ်းမင်း",
+      "spreadsheet": "စာရင်းဇယား"
     }
   },
   "dashboard": {
@@ -104,6 +116,7 @@
     "comingSoon": "မကြာမီလာမည်။",
     "scoreHistory": "အမှတ် မှတ်တမ်း",
     "weakTopics": "အားနည်းရာ ခေါင်းစဉ်များ",
+    "topic": "ခေါင်းစဉ်",
     "quickActions": "အမြန် လုပ်ဆောင်ချက်များ",
     "startExam": "စာမေးပွဲ စတင်ရန်",
     "browseQuestions": "မေးခွန်းများ ကြည့်ရှုရန်",
@@ -152,6 +165,7 @@
     "emptyPrompt": "ရှာဖွေရန် စကားလုံး ထည့်ပါ။",
     "results": "ရလဒ် {count} ခု တွေ့ရှိ{querySuffix}။",
     "resultsSuffix": " \"{query}\" အတွက်",
-    "noResults": "ရလဒ် မတွေ့ပါ။ စကားလုံးအသစ် စမ်းကြည့်ပါ။"
+    "noResults": "ရလဒ် မတွေ့ပါ။ စကားလုံးအသစ် စမ်းကြည့်ပါ။",
+    "allTopics": "ခေါင်းစဉ်အားလုံး"
   }
 }

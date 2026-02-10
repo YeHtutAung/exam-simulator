@@ -80,6 +80,7 @@ export default async function ImportDraftQuestionEditPage({
         initialValues={{
           stem: question.stem,
           correctAnswer: (question.correctAnswer ?? "a") as "a" | "b" | "c" | "d",
+          topic: question.topic ?? "",
           choices,
         }}
       />

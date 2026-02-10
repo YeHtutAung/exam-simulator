@@ -150,6 +150,7 @@ model Question {
   correctAnswer String
   explanation   String?
   sourcePage    String?
+  topic         String?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 
@@ -162,6 +163,7 @@ model Question {
   @@index([examId])
   @@index([type])
   @@index([stem])
+  @@index([topic])
 }
 
 model Choice {
@@ -232,6 +234,7 @@ model ImportDraftQuestion {
   stem           String
   stemImageUrl   String?
   correctAnswer  String?
+  topic          String?
   sourcePage     Int?
   pageImageUrl   String?
   cropX          Int?

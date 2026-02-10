@@ -2,24 +2,43 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 
+const TOPIC_PRESETS = [
+  "Discrete Math",
+  "Data Structures & Algorithms",
+  "Computer Hardware",
+  "Software",
+  "Database",
+  "Networking",
+  "Security",
+  "System Development",
+  "Project Management",
+  "Service Management",
+  "Business Strategy",
+  "Pseudo Code",
+  "Programming",
+  "Spreadsheet",
+];
+
 type SearchPageProps = {
-  searchParams?: Promise<{ query?: string; examId?: string }>;
+  searchParams?: Promise<{ query?: string; examId?: string; topic?: string }>;
 };
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
   const query = resolvedSearchParams.query?.trim() ?? "";
   const examId = resolvedSearchParams.examId ?? "";
+  const topic = resolvedSearchParams.topic?.trim() ?? "";
   const t = await getTranslations("search");
 
   const exams = await prisma.exam.findMany({ orderBy: { createdAt: "desc" } });
 
-  const hasSearch = Boolean(query || examId);
+  const hasSearch = Boolean(query || examId || topic);
   const questions = hasSearch
     ? await prisma.question.findMany({
         where: {
           ...(query ? { stem: { contains: query, mode: "insensitive" } } : {}),
           ...(examId ? { examId } : {}),
+          ...(topic ? { topic } : {}),
         },
         include: { exam: true },
         orderBy: { createdAt: "desc" },
@@ -34,7 +53,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         <p className="text-sm text-slate-600">{t("subtitle")}</p>
       </div>
 
-      <form action="/exam-runner" method="get" className="grid gap-4 md:grid-cols-[1fr_1fr_auto]">
+      <form action="/search" method="get" className="grid gap-4 md:grid-cols-[1fr_1fr_1fr_auto]">
         <input
           name="query"
           defaultValue={query}
@@ -50,6 +69,18 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           {exams.map((exam) => (
             <option key={exam.id} value={exam.id}>
               {exam.session} {exam.paper} - {exam.title}
+            </option>
+          ))}
+        </select>
+        <select
+          name="topic"
+          defaultValue={topic}
+          className="w-full rounded-lg border border-sand-300 bg-white px-3 py-2 text-sm"
+        >
+          <option value="">{t("allTopics")}</option>
+          {TOPIC_PRESETS.map((t) => (
+            <option key={t} value={t}>
+              {t}
             </option>
           ))}
         </select>
@@ -81,9 +112,16 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               href={`/questions/${question.id}`}
               className="block rounded-2xl border border-sand-300 bg-white p-4 transition hover:-translate-y-0.5 hover:shadow-md"
             >
-              <p className="text-xs font-semibold uppercase text-slate-500">
-                {question.exam.session} {question.exam.paper} · Q{question.questionNo}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-xs font-semibold uppercase text-slate-500">
+                  {question.exam.session} {question.exam.paper} · Q{question.questionNo}
+                </p>
+                {question.topic && (
+                  <span className="inline-block rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
+                    {question.topic}
+                  </span>
+                )}
+              </div>
               {question.stemImageUrl ? (
                 <img
                   src={question.stemImageUrl}

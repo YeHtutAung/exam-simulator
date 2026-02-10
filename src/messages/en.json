@@ -78,7 +78,19 @@
     "topics": {
       "networking": "Networking",
       "database": "Database",
-      "os": "OS"
+      "os": "OS",
+      "discreteMath": "Discrete Math",
+      "dataStructures": "Data Structures & Algorithms",
+      "computerHardware": "Computer Hardware",
+      "software": "Software",
+      "security": "Security",
+      "systemDevelopment": "System Development",
+      "projectManagement": "Project Management",
+      "serviceManagement": "Service Management",
+      "businessStrategy": "Business Strategy",
+      "pseudoCode": "Pseudo Code",
+      "programming": "Programming",
+      "spreadsheet": "Spreadsheet"
     }
   },
   "dashboard": {
@@ -104,6 +116,7 @@
     "comingSoon": "Coming soon.",
     "scoreHistory": "Score history",
     "weakTopics": "Weak topics",
+    "topic": "Topic",
     "quickActions": "Quick actions",
     "startExam": "Start an Exam",
     "browseQuestions": "Browse Questions",
@@ -152,6 +165,7 @@
     "emptyPrompt": "Enter a keyword to start searching.",
     "results": "Found {count} result(s){querySuffix}.",
     "resultsSuffix": " for \"{query}\"",
-    "noResults": "No results. Try another keyword."
+    "noResults": "No results. Try another keyword.",
+    "allTopics": "All topics"
   }
 }

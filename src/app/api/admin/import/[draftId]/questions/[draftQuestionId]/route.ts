@@ -105,6 +105,7 @@ export async function PATCH(request: Request, { params }: Params) {
       data: {
         stem: payload.stem,
         correctAnswer: payload.correctAnswer,
+        topic: payload.topic ?? null,
         warnings: warnings.length > 0 ? warnings : null,
       },
     });

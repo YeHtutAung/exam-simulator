@@ -110,6 +110,7 @@ export async function getSuggestionsForUser(userId: string, attemptWindow = DEFA
       question: {
         select: {
           id: true,
+          topic: true,
           exam: {
             select: {
               title: true,

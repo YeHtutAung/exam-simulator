@@ -1,9 +1,26 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { PublishDraftButton } from "@/components/admin/PublishDraftButton";
+
+const TOPIC_PRESETS = [
+  "Discrete Math",
+  "Data Structures & Algorithms",
+  "Computer Hardware",
+  "Software",
+  "Database",
+  "Networking",
+  "Security",
+  "System Development",
+  "Project Management",
+  "Service Management",
+  "Business Strategy",
+  "Pseudo Code",
+  "Programming",
+  "Spreadsheet",
+];
 
 type DraftQuestion = {
   id: string;
@@ -11,6 +28,7 @@ type DraftQuestion = {
   stem: string;
   stemImageUrl?: string | null;
   correctAnswer: string | null;
+  topic?: string | null;
   warnings: unknown;
   attachments: Array<{ id: string; url: string }>;
 };
@@ -44,6 +62,53 @@ function stemPreview(stem: string): string {
 
 export function ImportDraftReviewPanel({ initial }: { initial: DraftResponse }) {
   const [draft, setDraft] = useState(initial);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkTopic, setBulkTopic] = useState("");
+  const [bulkLoading, setBulkLoading] = useState(false);
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAll = useCallback(() => {
+    setSelectedIds((prev) =>
+      prev.size === draft.questions.length
+        ? new Set()
+        : new Set(draft.questions.map((q) => q.id))
+    );
+  }, [draft.questions]);
+
+  const handleBulkAssign = useCallback(async () => {
+    if (!bulkTopic || selectedIds.size === 0) return;
+    setBulkLoading(true);
+    const response = await fetch(
+      `/api/admin/import/${draft.id}/questions/bulk-topic`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          questionIds: Array.from(selectedIds),
+          topic: bulkTopic,
+        }),
+      }
+    );
+    if (response.ok) {
+      setDraft((prev) => ({
+        ...prev,
+        questions: prev.questions.map((q) =>
+          selectedIds.has(q.id) ? { ...q, topic: bulkTopic } : q
+        ),
+      }));
+      setSelectedIds(new Set());
+      setBulkTopic("");
+    }
+    setBulkLoading(false);
+  }, [bulkTopic, selectedIds, draft.id]);
 
   useEffect(() => {
     if (draft.status !== "PARSING") {
@@ -179,13 +244,49 @@ export function ImportDraftReviewPanel({ initial }: { initial: DraftResponse }) 
         </div>
       )}
 
+      {selectedIds.size > 0 && (
+        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-sand-300 bg-white p-4">
+          <span className="text-sm font-medium text-slate-700">
+            {selectedIds.size} selected
+          </span>
+          <select
+            value={bulkTopic}
+            onChange={(e) => setBulkTopic(e.target.value)}
+            className="rounded-lg border border-sand-300 bg-white px-3 py-1.5 text-sm"
+          >
+            <option value="">Assign topic...</option>
+            {TOPIC_PRESETS.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={handleBulkAssign}
+            disabled={!bulkTopic || bulkLoading}
+            className="rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-white hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {bulkLoading ? "Assigning..." : "Apply"}
+          </button>
+        </div>
+      )}
+
       <div className="overflow-hidden rounded-2xl border border-sand-300 bg-white">
         <table className="w-full text-left text-sm">
           <thead className="bg-sand-100 text-xs uppercase text-slate-500">
             <tr>
+              <th className="px-4 py-3">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.size === draft.questions.length && draft.questions.length > 0}
+                  onChange={toggleSelectAll}
+                  className="h-3.5 w-3.5"
+                />
+              </th>
               <th className="px-4 py-3">No.</th>
               <th className="px-4 py-3">Preview</th>
               <th className="px-4 py-3">Stem</th>
+              <th className="px-4 py-3">Topic</th>
               <th className="px-4 py-3">Answer</th>
               <th className="px-4 py-3">Warnings</th>
               <th className="px-4 py-3">Image</th>
@@ -198,6 +299,14 @@ export function ImportDraftReviewPanel({ initial }: { initial: DraftResponse }) 
               const hasImage = question.attachments.length > 0;
               return (
                 <tr key={question.id} className="border-t border-sand-200">
+                  <td className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(question.id)}
+                      onChange={() => toggleSelect(question.id)}
+                      className="h-3.5 w-3.5"
+                    />
+                  </td>
                   <td className="px-4 py-3 font-semibold">{question.questionNo}</td>
                   <td className="px-4 py-3">
                     {question.stemImageUrl ? (
@@ -217,6 +326,15 @@ export function ImportDraftReviewPanel({ initial }: { initial: DraftResponse }) 
                   <td className="px-4 py-3 text-slate-700">
                     {stemPreview(question.stem)}
                   </td>
+                  <td className="px-4 py-3">
+                    {question.topic ? (
+                      <span className="inline-block rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
+                        {question.topic}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-slate-400">-</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 uppercase">{question.correctAnswer ?? "-"}</td>
                   <td className="px-4 py-3 text-slate-600">{questionWarnings}</td>
                   <td className="px-4 py-3 text-slate-600">{hasImage ? "Yes" : "No"}</td>
@@ -233,7 +351,7 @@ export function ImportDraftReviewPanel({ initial }: { initial: DraftResponse }) 
             })}
             {draft.questions.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-sm text-slate-500">
+                <td colSpan={9} className="px-4 py-6 text-center text-sm text-slate-500">
                   {draft.status === "PARSING"
                     ? "Import in progress..."
                     : "No questions available."}
