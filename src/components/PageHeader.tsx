@@ -7,6 +7,7 @@ type PageHeaderProps = {
   fallbackHref: string;
   showBack?: boolean;
   eyebrow?: string;
+  useDirectNavigation?: boolean;
 };
 
 export function PageHeader({
@@ -14,10 +15,15 @@ export function PageHeader({
   fallbackHref,
   showBack = true,
   eyebrow,
+  useDirectNavigation = false,
 }: PageHeaderProps) {
   const router = useRouter();
 
   const handleBack = () => {
+    if (useDirectNavigation) {
+      router.push(fallbackHref);
+      return;
+    }
     if (typeof window === "undefined") {
       router.push(fallbackHref);
       return;

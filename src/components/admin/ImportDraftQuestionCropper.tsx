@@ -367,7 +367,7 @@ export function ImportDraftQuestionCropper({
     }
     const saved = await handleSave();
     if (saved) {
-      router.push(`/admin/import/${draftId}/questions/${nextQuestionId}`);
+      router.replace(`/admin/import/${draftId}/questions/${nextQuestionId}`);
     }
   };
 
@@ -394,7 +394,7 @@ export function ImportDraftQuestionCropper({
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={() => prevQuestionId && router.push(`/admin/import/${draftId}/questions/${prevQuestionId}`)}
+            onClick={() => prevQuestionId && router.replace(`/admin/import/${draftId}/questions/${prevQuestionId}`)}
             disabled={!prevQuestionId}
             className="rounded-full border border-sand-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 disabled:opacity-60"
           >
@@ -402,7 +402,7 @@ export function ImportDraftQuestionCropper({
           </button>
           <button
             type="button"
-            onClick={() => nextQuestionId && router.push(`/admin/import/${draftId}/questions/${nextQuestionId}`)}
+            onClick={() => nextQuestionId && router.replace(`/admin/import/${draftId}/questions/${nextQuestionId}`)}
             disabled={!nextQuestionId}
             className="rounded-full border border-sand-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 disabled:opacity-60"
           >

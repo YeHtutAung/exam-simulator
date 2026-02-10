@@ -1,7 +1,7 @@
-import { headers } from "next/headers";
 import { ImportDraftReviewPanel } from "@/components/admin/ImportDraftReviewPanel";
 import { requireOwner } from "@/lib/rbac";
 import { PageHeader } from "@/components/PageHeader";
+import { prisma } from "@/lib/prisma";
 
 export default async function ImportDraftDetailPage({
   params,
@@ -10,19 +10,25 @@ export default async function ImportDraftDetailPage({
 }) {
   await requireOwner();
   const resolvedParams = await params;
-  const headerList = await headers();
-  const host = headerList.get("host");
-  const protocol = host?.includes("localhost") ? "http" : "https";
-  const baseUrl = host ? `${protocol}://${host}` : "";
 
-  const response = await fetch(
-    `${baseUrl}/api/admin/import/${resolvedParams.draftId}`,
-    {
-      cache: "no-store",
-    }
-  );
+  const draft = await prisma.importDraft.findUnique({
+    where: { id: resolvedParams.draftId },
+    include: {
+      questions: {
+        orderBy: { questionNo: "asc" },
+        include: {
+          choices: {
+            orderBy: { sortOrder: "asc" },
+          },
+          attachments: {
+            orderBy: { sortOrder: "asc" },
+          },
+        },
+      },
+    },
+  });
 
-  if (!response.ok) {
+  if (!draft) {
     return (
       <div className="space-y-4">
         <PageHeader title="Import draft" fallbackHref="/owner/import" eyebrow="Owner Portal" />
@@ -32,8 +38,6 @@ export default async function ImportDraftDetailPage({
       </div>
     );
   }
-
-  const draft = (await response.json()) as any;
 
   return <ImportDraftReviewPanel initial={draft} />;
 }

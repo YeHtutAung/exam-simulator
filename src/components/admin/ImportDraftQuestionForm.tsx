@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -21,6 +22,7 @@ export function ImportDraftQuestionForm({
   initialValues,
   hasStemImage = false,
 }: ImportDraftQuestionFormProps) {
+  const router = useRouter();
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const {
@@ -51,7 +53,7 @@ export function ImportDraftQuestionForm({
       return;
     }
 
-    setStatus("Saved.");
+    router.push(`/admin/import/${draftId}`);
   };
 
   return (
