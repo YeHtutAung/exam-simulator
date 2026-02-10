@@ -92,9 +92,14 @@ NEXTAUTH_SECRET="replace-with-a-strong-secret"
 GOOGLE_CLIENT_ID="your-google-client-id"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
 OWNER_EMAILS="owner1@example.com,owner2@example.com"
+EMAIL_FROM="no-reply@example.com"
 ```
 
 Admin bootstrap: the first sign-in for any email in `OWNER_EMAILS` is assigned `OWNER` role. Everyone else becomes `USER`.
+
+Email/password auth notes:
+- Registration, verification, and reset links are logged to the server console in dev by default.
+- Wire SMTP later by replacing the stub in `src/lib/email.ts`.
 
 ## Notes
 - CRUD APIs use Route Handlers under `src/app/api`.
@@ -191,3 +196,10 @@ If a crop looks off, use the admin question editor to auto-detect or manually ad
 4. Double-submit:
    - No duplicate attempts
    - Same totals returned
+
+## Auth (Email + Password) Manual Tests
+1. Register with email/password at `/register` -> verification link logged.
+2. Open `/api/auth/verify?token=...` -> redirected to `/signin?verified=1`.
+3. Sign in with credentials -> redirected to `/dashboard`.
+4. Invalid password -> generic error.
+5. Forgot/reset password -> reset link logged, new password works.
