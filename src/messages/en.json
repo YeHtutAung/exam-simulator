@@ -101,7 +101,18 @@
     "practice": "Practice",
     "suggestionsEmpty": "Complete more practice to get personalized suggestions.",
     "report": "Report",
-    "comingSoon": "Coming soon."
+    "comingSoon": "Coming soon.",
+    "scoreHistory": "Score history",
+    "weakTopics": "Weak topics",
+    "quickActions": "Quick actions",
+    "startExam": "Start an Exam",
+    "browseQuestions": "Browse Questions",
+    "emptyTitle": "No attempts yet",
+    "emptySubtitle": "Take your first exam to see your performance dashboard.",
+    "emptyCta": "Start an Exam",
+    "noScoreData": "No score data yet",
+    "trendLabel": "vs last",
+    "attemptLabel": "#{number}"
   },
   "admin": {
     "exams": "Exams",
