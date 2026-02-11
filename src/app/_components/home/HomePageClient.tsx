@@ -16,9 +16,21 @@ type ExamSummary = {
   createdAt: Date;
 };
 
+type TopicStat = {
+  key: string;
+  value: number;
+};
+
+type UserStats = {
+  accuracy: number;
+  totalAttempts: number;
+  topics: TopicStat[];
+} | null;
+
 type HomePageClientProps = {
   exams: ExamSummary[];
   isAuthenticated: boolean;
+  userStats?: UserStats;
 };
 
 function languageBadgeLabel(language: string) {
@@ -48,10 +60,12 @@ function HeroSection({
   onPrimaryCta,
   onSecondaryCta,
   isAuthenticated,
+  userStats,
 }: {
   onPrimaryCta: () => void;
   onSecondaryCta: () => void;
   isAuthenticated: boolean;
+  userStats?: UserStats;
 }) {
   const t = useTranslations("home");
   return (
@@ -100,7 +114,7 @@ function HeroSection({
           <p className="text-xs text-slate-500">{t("hero.hint")}</p>
         </div>
         <div className="rounded-2xl border border-sand-200 bg-sand p-4">
-          <ReportPreviewCard />
+          <ReportPreviewCard userStats={userStats} />
         </div>
       </div>
     </section>
@@ -226,7 +240,7 @@ function QuickStart() {
     {
       title: t("quickStart.item1Title"),
       description: t("quickStart.item1Desc"),
-      href: "/exam-runner?mode=latest",
+      href: "/search",
       accent: "#4F7DFF",
       soft: "rgba(79, 125, 255, 0.16)",
     },
@@ -340,7 +354,7 @@ function ExamsGrid({ exams }: { exams: ExamSummary[] }) {
   );
 }
 
-export function HomePageClient({ exams, isAuthenticated }: HomePageClientProps) {
+export function HomePageClient({ exams, isAuthenticated, userStats }: HomePageClientProps) {
   const t = useTranslations("home");
   const inputRef = useRef<HTMLInputElement>(null);
   const searchSectionRef = useRef<HTMLElement>(null);
@@ -361,6 +375,7 @@ export function HomePageClient({ exams, isAuthenticated }: HomePageClientProps) 
           onPrimaryCta={handlePrimaryCta}
           onSecondaryCta={handleSecondaryCta}
           isAuthenticated={isAuthenticated}
+          userStats={userStats}
         />
         <DashboardPreview />
         <div ref={searchSectionRef}>
