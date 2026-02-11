@@ -33,9 +33,11 @@ export function ReportPreviewCard({ userStats }: { userStats?: UserStats }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-            {t("reportPreview.title")}
+            {t(isReal ? "reportPreview.titleLoggedIn" : "reportPreview.title")}
           </p>
-          <p className="text-sm text-slate-600">{t("reportPreview.caption")}</p>
+          <p className="text-sm text-slate-600">
+            {t(isReal ? "reportPreview.captionLoggedIn" : "reportPreview.caption")}
+          </p>
         </div>
         {!isReal && (
           <span className="rounded-full border border-sand-200 bg-sand-100/60 px-3 py-1 text-[11px] font-semibold text-slate-600">

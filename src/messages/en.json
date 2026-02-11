@@ -31,14 +31,19 @@
     },
     "dashboardPreview": {
       "eyebrow": "What you unlock after signup",
+      "eyebrowLoggedIn": "Your dashboard highlights",
       "title": "Track progress with real feedback",
+      "titleLoggedIn": "Your performance summary",
       "subtitle": "See detailed scores and accuracy after every attempt.",
+      "subtitleLoggedIn": "Here's how you've been doing so far.",
       "card1Title": "Score & accuracy",
       "card1Detail": "Instant score breakdown",
+      "card1Accuracy": "accuracy",
       "card2Title": "Weak-topic analysis",
       "card2Detail": "Know what to study next",
       "card3Title": "Attempt history",
-      "card3Detail": "Review every session"
+      "card3Detail": "Review every session",
+      "card3Total": "total attempts"
     },
     "search": {
       "label": "Search questions",
@@ -68,8 +73,10 @@
     },
     "reportPreview": {
       "title": "Summary report (preview)",
+      "titleLoggedIn": "Performance summary",
       "afterSignup": "After free signup",
       "caption": "See your score and weak topics after every attempt.",
+      "captionLoggedIn": "Your performance at a glance.",
       "overallScore": "Overall score",
       "recentAttempt": "Based on recent attempt",
       "accuracyByTopic": "Accuracy by topic",

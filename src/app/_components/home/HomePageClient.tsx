@@ -121,41 +121,98 @@ function HeroSection({
   );
 }
 
-function DashboardPreview() {
+function DashboardPreview({
+  isAuthenticated,
+  userStats,
+}: {
+  isAuthenticated: boolean;
+  userStats?: UserStats;
+}) {
   const t = useTranslations("home");
-  const cards = [
-    { title: t("dashboardPreview.card1Title"), detail: t("dashboardPreview.card1Detail") },
-    { title: t("dashboardPreview.card2Title"), detail: t("dashboardPreview.card2Detail") },
-    { title: t("dashboardPreview.card3Title"), detail: t("dashboardPreview.card3Detail") },
-  ];
+  const hasData = isAuthenticated && !!userStats;
+
+  // Find weakest topics (lowest accuracy, up to 3)
+  const weakTopics = hasData
+    ? [...userStats.topics].sort((a, b) => a.value - b.value).slice(0, 3)
+    : [];
+
   return (
     <section className="rounded-3xl border border-sand-200 bg-white p-8 shadow-sm">
       <div className="space-y-5">
         <div>
           <p className="text-xs font-semibold uppercase text-slate-500">
-            {t("dashboardPreview.eyebrow")}
+            {t(isAuthenticated ? "dashboardPreview.eyebrowLoggedIn" : "dashboardPreview.eyebrow")}
           </p>
           <h2 className="mt-2 text-2xl font-semibold text-slate-900">
-            {t("dashboardPreview.title")}
+            {t(isAuthenticated ? "dashboardPreview.titleLoggedIn" : "dashboardPreview.title")}
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-slate-600">
-            {t("dashboardPreview.subtitle")}
+            {t(isAuthenticated ? "dashboardPreview.subtitleLoggedIn" : "dashboardPreview.subtitle")}
           </p>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
-          {cards.map((card) => (
-            <div
-              key={card.title}
-              className="rounded-2xl border border-sand-200 bg-sand-100/60 p-4"
-            >
-              <div className="h-2 w-16 rounded-full bg-slate-300/60" />
-              <p className="mt-4 text-sm font-semibold text-slate-900">
-                {card.title}
-              </p>
-              <p className="mt-2 text-xs text-slate-500">{card.detail}</p>
+          {/* Card 1: Score & accuracy */}
+          <div className="rounded-2xl border border-sand-200 bg-sand-100/60 p-4">
+            <div className="h-2 w-16 rounded-full bg-slate-300/60" />
+            <p className="mt-4 text-sm font-semibold text-slate-900">
+              {t("dashboardPreview.card1Title")}
+            </p>
+            <p className="mt-2 text-xs text-slate-500">
+              {t("dashboardPreview.card1Detail")}
+            </p>
+            {hasData ? (
+              <div className="mt-4 flex items-end gap-1.5 rounded-xl bg-white/70 px-4 py-3">
+                <span className="text-3xl font-bold text-accent">{userStats.accuracy}%</span>
+                <span className="mb-1 text-xs text-slate-500">{t("dashboardPreview.card1Accuracy")}</span>
+              </div>
+            ) : (
               <div className="mt-4 h-16 rounded-xl bg-white/70" />
-            </div>
-          ))}
+            )}
+          </div>
+
+          {/* Card 2: Weak-topic analysis */}
+          <div className="rounded-2xl border border-sand-200 bg-sand-100/60 p-4">
+            <div className="h-2 w-16 rounded-full bg-slate-300/60" />
+            <p className="mt-4 text-sm font-semibold text-slate-900">
+              {t("dashboardPreview.card2Title")}
+            </p>
+            <p className="mt-2 text-xs text-slate-500">
+              {t("dashboardPreview.card2Detail")}
+            </p>
+            {hasData && weakTopics.length > 0 ? (
+              <div className="mt-4 space-y-1.5 rounded-xl bg-white/70 px-4 py-3">
+                {weakTopics.map((topic) => (
+                  <div key={topic.key} className="flex items-center justify-between text-xs">
+                    <span className="font-medium text-slate-700 truncate mr-2">{topic.key}</span>
+                    <span className={`font-semibold ${topic.value >= 60 ? "text-emerald-600" : "text-rose-600"}`}>
+                      {topic.value}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-4 h-16 rounded-xl bg-white/70" />
+            )}
+          </div>
+
+          {/* Card 3: Attempt history */}
+          <div className="rounded-2xl border border-sand-200 bg-sand-100/60 p-4">
+            <div className="h-2 w-16 rounded-full bg-slate-300/60" />
+            <p className="mt-4 text-sm font-semibold text-slate-900">
+              {t("dashboardPreview.card3Title")}
+            </p>
+            <p className="mt-2 text-xs text-slate-500">
+              {t("dashboardPreview.card3Detail")}
+            </p>
+            {hasData ? (
+              <div className="mt-4 flex items-end gap-1.5 rounded-xl bg-white/70 px-4 py-3">
+                <span className="text-3xl font-bold text-slate-900">{userStats.totalAttempts}</span>
+                <span className="mb-1 text-xs text-slate-500">{t("dashboardPreview.card3Total")}</span>
+              </div>
+            ) : (
+              <div className="mt-4 h-16 rounded-xl bg-white/70" />
+            )}
+          </div>
         </div>
       </div>
     </section>
@@ -377,7 +434,7 @@ export function HomePageClient({ exams, isAuthenticated, userStats }: HomePageCl
           isAuthenticated={isAuthenticated}
           userStats={userStats}
         />
-        <DashboardPreview />
+        <DashboardPreview isAuthenticated={isAuthenticated} userStats={userStats} />
         <div ref={searchSectionRef}>
           <CommandSearch exams={exams} inputRef={inputRef} />
         </div>
