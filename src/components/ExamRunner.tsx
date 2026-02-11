@@ -18,6 +18,12 @@ type Question = {
   choices: Choice[];
 };
 
+type ResumeData = {
+  attemptId: string;
+  startedAt: string;
+  answers: Record<string, string>;
+};
+
 type ExamRunnerProps = {
   examId: string;
   title: string;
@@ -27,6 +33,7 @@ type ExamRunnerProps = {
   enableTimer?: boolean;
   randomIds?: string[];
   summaryRedirectHref?: string;
+  resumeData?: ResumeData | null;
 };
 
 type StoredRun = {
@@ -58,6 +65,7 @@ export function ExamRunner({
   enableTimer = true,
   randomIds,
   summaryRedirectHref = "/",
+  resumeData,
 }: ExamRunnerProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, "a" | "b" | "c" | "d" | null>>(
@@ -76,6 +84,8 @@ export function ExamRunner({
     "idle",
   );
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
+  const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
+  const leaveGuardRef = useRef(true);
   const router = useRouter();
   const searchParams = useSearchParams();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -196,6 +206,7 @@ export function ExamRunner({
     };
     persistRun(payload);
     if (shouldPersist) {
+      leaveGuardRef.current = false;
       router.push("/dashboard");
       return;
     }
@@ -223,6 +234,23 @@ export function ExamRunner({
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    // If resumeData is provided (server-side resume), use it instead of localStorage
+    if (resumeData) {
+      setAttemptId(resumeData.attemptId);
+      attemptIdRef.current = resumeData.attemptId;
+      setStartedAt(resumeData.startedAt);
+      setAnswers(
+        Object.fromEntries(
+          Object.entries(resumeData.answers).map(([k, v]) => [k, v as "a" | "b" | "c" | "d"])
+        ),
+      );
+      const elapsedSec = Math.floor(
+        (Date.now() - new Date(resumeData.startedAt).getTime()) / 1000,
+      );
+      setRemainingSeconds(Math.max(0, durationSeconds - elapsedSec));
+      setIsHydrated(true);
+      return;
+    }
     const storedRaw = window.localStorage.getItem(storageKey);
     if (storedRaw) {
       try {
@@ -240,6 +268,7 @@ export function ExamRunner({
       }
     }
     setIsHydrated(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [durationSeconds, storageKey]);
 
   useEffect(() => {
@@ -356,6 +385,40 @@ export function ExamRunner({
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [isSummaryOpen]);
+
+  // --- Navigation guards ---
+  const isGuardActive = isHydrated && !isSubmitting && !isSummaryOpen;
+
+  // beforeunload — warns when closing/refreshing tab
+  useEffect(() => {
+    if (!isGuardActive) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isGuardActive]);
+
+  // popstate — intercepts browser back/forward
+  useEffect(() => {
+    if (!isGuardActive) return;
+    // Push a sentinel entry so pressing back fires popstate instead of leaving
+    history.pushState({ examGuard: true }, "");
+    const handler = () => {
+      if (!leaveGuardRef.current) return;
+      // Re-push sentinel to keep the user on the page
+      history.pushState({ examGuard: true }, "");
+      setIsLeaveModalOpen(true);
+    };
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
+  }, [isGuardActive]);
+
+  const handleLeaveConfirm = () => {
+    setIsLeaveModalOpen(false);
+    leaveGuardRef.current = false;
+    history.go(-1);
+  };
 
   const activePillRef = useCallback((node: HTMLButtonElement | null) => {
     node?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
@@ -558,6 +621,42 @@ export function ExamRunner({
                 className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-strong"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isLeaveModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4"
+          onClick={() => setIsLeaveModalOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Leave exam"
+            className="w-full max-w-lg rounded-2xl border border-sand-300 bg-white p-6"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 className="text-lg font-semibold text-slate-900">Leave exam?</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              Your progress is saved, but the timer keeps running. Are you sure you want to leave?
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => setIsLeaveModalOpen(false)}
+                className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-strong"
+              >
+                Stay
+              </button>
+              <button
+                type="button"
+                onClick={handleLeaveConfirm}
+                className="rounded-full border border-sand-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900"
+              >
+                Leave
               </button>
             </div>
           </div>

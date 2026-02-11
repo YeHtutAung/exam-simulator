@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getSuggestionsForUser } from "@/lib/services/suggestions";
 
 export async function getUserDashboard(userId: string) {
-  const [attemptStats, attempts] = await Promise.all([
+  const [attemptStats, attempts, inProgressRaw] = await Promise.all([
     prisma.attempt.aggregate({
       where: { userId, status: "SUBMITTED" },
       _count: { id: true },
@@ -15,6 +15,14 @@ export async function getUserDashboard(userId: string) {
       take: 6,
       include: {
         exam: true,
+      },
+    }),
+    prisma.attempt.findMany({
+      where: { userId, status: "IN_PROGRESS" },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      include: {
+        exam: { select: { id: true, title: true, session: true, paper: true, durationMinutes: true } },
       },
     }),
   ]);
@@ -45,6 +53,27 @@ export async function getUserDashboard(userId: string) {
       : null,
   }));
 
+  // Filter out expired in-progress attempts
+  const inProgressAttempts = inProgressRaw
+    .filter((a) => {
+      if (!a.exam) return false;
+      const durationSec = (a.exam.durationMinutes ?? 150) * 60;
+      const elapsed = Math.floor((Date.now() - new Date(a.startedAt).getTime()) / 1000);
+      return elapsed < durationSec;
+    })
+    .map((a) => ({
+      id: a.id,
+      startedAt: a.startedAt,
+      exam: a.exam
+        ? {
+            id: a.exam.id,
+            title: a.exam.title,
+            session: a.exam.session,
+            paper: a.exam.paper,
+          }
+        : null,
+    }));
+
   let suggestions = {
     weakTopics: [],
     allTopics: [],
@@ -65,6 +94,7 @@ export async function getUserDashboard(userId: string) {
       averageScore,
     },
     attempts: recentAttempts,
+    inProgressAttempts,
     suggestions,
   };
 }

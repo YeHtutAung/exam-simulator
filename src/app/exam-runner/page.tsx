@@ -3,6 +3,61 @@ import { prisma } from "@/lib/prisma";
 import { getServerAuthSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
+async function buildResumeData(
+  userId: string,
+  examId: string,
+  durationSeconds: number,
+): Promise<{ attemptId: string; startedAt: string; answers: Record<string, string> } | null> {
+  const inProgress = await prisma.attempt.findFirst({
+    where: { userId, examId, status: "IN_PROGRESS" },
+    orderBy: { createdAt: "desc" },
+    include: {
+      answers: { select: { questionId: true, chosenOption: true } },
+    },
+  });
+  if (!inProgress) return null;
+
+  const elapsedSec = Math.floor(
+    (Date.now() - new Date(inProgress.startedAt).getTime()) / 1000,
+  );
+
+  // If time has expired, auto-submit this attempt
+  if (elapsedSec >= durationSeconds) {
+    const correctCount = await prisma.attemptAnswer.count({
+      where: { attemptId: inProgress.id, isCorrect: true },
+    });
+    const totalQuestions =
+      inProgress.totalQuestions > 0
+        ? inProgress.totalQuestions
+        : await prisma.question.count({ where: { examId } });
+    const score = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
+    await prisma.attempt.update({
+      where: { id: inProgress.id },
+      data: {
+        status: "SUBMITTED",
+        finishedAt: new Date(),
+        totalQuestions,
+        correctCount,
+        score,
+        durationSec: durationSeconds,
+      },
+    });
+    return null; // expired — new attempt will be created
+  }
+
+  const answersMap: Record<string, string> = {};
+  for (const a of inProgress.answers) {
+    if (a.chosenOption) {
+      answersMap[a.questionId] = a.chosenOption;
+    }
+  }
+  return {
+    attemptId: inProgress.id,
+    startedAt: inProgress.startedAt.toISOString(),
+    answers: answersMap,
+  };
+}
+
 const demoQuestions = [
   {
     id: "demo-q1",
@@ -200,6 +255,12 @@ export default async function ExamRunnerPage({ searchParams }: ExamRunnerPagePro
         />
       );
     }
+    const latestDurationSec = (latestExam.durationMinutes ?? 150) * 60;
+    const latestResumeData = await buildResumeData(
+      session.user.id,
+      latestExam.id,
+      latestDurationSec,
+    );
     return (
       <ExamRunner
         examId={latestExam.id}
@@ -221,7 +282,8 @@ export default async function ExamRunnerPage({ searchParams }: ExamRunnerPagePro
             text: choice.text,
           })),
         }))}
-        durationSeconds={(latestExam.durationMinutes ?? 150) * 60}
+        durationSeconds={latestDurationSec}
+        resumeData={latestResumeData}
       />
     );
   }
@@ -231,6 +293,7 @@ export default async function ExamRunnerPage({ searchParams }: ExamRunnerPagePro
   });
   const durationMinutes =
     (exam as { durationMinutes?: number | null } | null)?.durationMinutes ?? 150;
+  const examDurationSec = durationMinutes * 60;
 
   const questions = await prisma.question.findMany({
     where: { examId, type: "MCQ_SINGLE" },
@@ -253,12 +316,17 @@ export default async function ExamRunnerPage({ searchParams }: ExamRunnerPagePro
         }))
       : demoQuestions;
 
+  const examResumeData = examId
+    ? await buildResumeData(session.user.id, examId, examDurationSec)
+    : null;
+
   return (
       <ExamRunner
         examId={examId}
         title={exam?.title ?? "Exam Runner"}
         questions={normalizedQuestions}
-        durationSeconds={durationMinutes * 60}
+        durationSeconds={examDurationSec}
+        resumeData={examResumeData}
       />
     );
 }

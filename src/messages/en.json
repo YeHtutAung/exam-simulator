@@ -133,7 +133,15 @@
     "emptyCta": "Start an Exam",
     "noScoreData": "No score data yet",
     "trendLabel": "vs last",
-    "attemptLabel": "#{number}"
+    "attemptLabel": "#{number}",
+    "inProgressHeading": "In-Progress Exams",
+    "continueExam": "Continue"
+  },
+  "examRunner": {
+    "leaveTitle": "Leave exam?",
+    "leaveMessage": "Your progress is saved, but the timer keeps running. Are you sure you want to leave?",
+    "leaveStay": "Stay",
+    "leaveConfirm": "Leave"
   },
   "admin": {
     "exams": "Exams",

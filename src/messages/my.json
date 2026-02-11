@@ -133,7 +133,15 @@
     "emptyCta": "စာမေးပွဲ စတင်ရန်",
     "noScoreData": "အမှတ်ဒေတာ မရှိသေးပါ",
     "trendLabel": "ယခင်နှင့်",
-    "attemptLabel": "#{number}"
+    "attemptLabel": "#{number}",
+    "inProgressHeading": "မပြီးသေးသော စာမေးပွဲများ",
+    "continueExam": "ဆက်လုပ်ရန်"
+  },
+  "examRunner": {
+    "leaveTitle": "စာမေးပွဲမှ ထွက်မလား?",
+    "leaveMessage": "သင့်တိုးတက်မှုကို သိမ်းဆည်းထားသော်လည်း အချိန်တိုင်းတာမှု ဆက်လည်ပတ်နေပါသည်။ ထွက်ခွာလိုသည်မှာ သေချာပါသလား?",
+    "leaveStay": "ဆက်နေရန်",
+    "leaveConfirm": "ထွက်ခွာရန်"
   },
   "admin": {
     "exams": "စာမေးပွဲများ",

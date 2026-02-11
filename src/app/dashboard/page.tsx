@@ -13,7 +13,7 @@ export default async function DashboardPage() {
   const dashboard = await getUserDashboard(user.id);
   const t = await getTranslations("dashboard");
 
-  const { metrics, attempts, suggestions } = dashboard;
+  const { metrics, attempts, suggestions, inProgressAttempts } = dashboard;
 
   // Empty state
   if (metrics.totalAttempts === 0) {
@@ -106,6 +106,38 @@ export default async function DashboardPage() {
         <h2 className="mb-4 text-sm font-semibold">{t("scoreHistory")}</h2>
         <ScoreHistoryChart attempts={barData} noDataLabel={t("noScoreData")} />
       </div>
+
+      {/* In-Progress Exams Banner */}
+      {inProgressAttempts.length > 0 && (
+        <div className="rounded-2xl border border-amber-300 bg-amber-50 p-6">
+          <h2 className="text-sm font-semibold text-amber-800">{t("inProgressHeading")}</h2>
+          <div className="mt-3 space-y-2">
+            {inProgressAttempts.map((attempt) => (
+              <div
+                key={attempt.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-200 bg-white px-4 py-3"
+              >
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">
+                    {attempt.exam
+                      ? `${attempt.exam.session ?? ""} ${attempt.exam.paper ?? ""} - ${attempt.exam.title}`.trim()
+                      : t("practiceSession")}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {new Date(attempt.startedAt).toLocaleString()}
+                  </p>
+                </div>
+                <Link
+                  href={`/exam-runner?examId=${attempt.exam?.id ?? ""}`}
+                  className="rounded-full bg-amber-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-amber-700"
+                >
+                  {t("continueExam")}
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Two columns: Recent Attempts + Weak Topics */}
       <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
