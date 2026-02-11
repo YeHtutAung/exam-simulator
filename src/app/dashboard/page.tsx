@@ -5,7 +5,7 @@ import { getUserDashboard } from "@/lib/services/dashboard";
 import AccuracyRing from "@/components/dashboard/AccuracyRing";
 import MetricCard from "@/components/dashboard/MetricCard";
 import ScoreHistoryChart from "@/components/dashboard/ScoreHistoryChart";
-import TopicProgressBar from "@/components/dashboard/TopicProgressBar";
+import TopicRadarChart from "@/components/dashboard/TopicRadarChart";
 import EmptyDashboard from "@/components/dashboard/EmptyDashboard";
 
 export default async function DashboardPage() {
@@ -153,20 +153,13 @@ export default async function DashboardPage() {
         <div className="space-y-4">
           <div className="rounded-2xl border border-sand-300 bg-white p-6">
             <h2 className="mb-4 text-sm font-semibold">{t("topicPerformance")}</h2>
-            {suggestions.allTopics.length > 0 ? (
-              <div className="space-y-4">
-                {suggestions.allTopics.map((topic) => (
-                  <TopicProgressBar
-                    key={topic.topic}
-                    topic={topic.topic}
-                    accuracy={topic.accuracy}
-                    incorrectCount={topic.incorrectCount}
-                    totalAnswered={topic.totalAnswered}
-                    practiceLabel={t("practice")}
-                    wrongLabel={t("wrongAnswered", { wrong: topic.incorrectCount, total: topic.totalAnswered })}
-                  />
-                ))}
-              </div>
+            {suggestions.allTopics.length >= 3 ? (
+              <TopicRadarChart
+                topics={suggestions.allTopics.map((topic) => ({
+                  label: topic.topic,
+                  value: topic.accuracy,
+                }))}
+              />
             ) : (
               <p className="text-xs text-slate-500">{t("suggestionsEmpty")}</p>
             )}

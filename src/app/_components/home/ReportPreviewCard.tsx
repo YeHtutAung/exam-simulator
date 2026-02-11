@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import TopicRadarChart from "@/components/dashboard/TopicRadarChart";
 
 type TopicStat = {
   key: string;
@@ -56,23 +57,12 @@ export function ReportPreviewCard({ userStats }: { userStats?: UserStats }) {
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
             {t("reportPreview.accuracyByTopic")}
           </p>
-          <div className="space-y-3">
-            {topics.map((topic) => (
-              <div key={topic.key} className="space-y-1">
-                <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
-                  <span>{isReal ? topic.key : t(`topics.${topic.key}`)}</span>
-                  <span>{topic.value}%</span>
-                </div>
-                <div className="h-2 w-full rounded-full bg-sand-200/80">
-                  <div
-                    className="h-2 rounded-full bg-accent"
-                    style={{ width: `${topic.value}%` }}
-                    aria-hidden="true"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
+          <TopicRadarChart
+            topics={topics.map((topic) => ({
+              label: isReal ? topic.key : t(`topics.${topic.key}`),
+              value: topic.value,
+            }))}
+          />
         </div>
       )}
 
