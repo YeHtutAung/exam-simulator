@@ -224,7 +224,7 @@ function CommandSearch({
   inputRef,
 }: {
   exams: ExamSummary[];
-  inputRef: RefObject<HTMLInputElement>;
+  inputRef: RefObject<HTMLInputElement | null>;
 }) {
   const t = useTranslations("home");
   return (
@@ -414,7 +414,7 @@ function ExamsGrid({ exams }: { exams: ExamSummary[] }) {
 export function HomePageClient({ exams, isAuthenticated, userStats }: HomePageClientProps) {
   const t = useTranslations("home");
   const inputRef = useRef<HTMLInputElement>(null);
-  const searchSectionRef = useRef<HTMLElement>(null);
+  const searchSectionRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   const handlePrimaryCta = () => {

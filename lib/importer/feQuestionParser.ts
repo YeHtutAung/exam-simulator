@@ -76,7 +76,7 @@ async function mapQuestionPages(
   startPage = 1
 ): Promise<Map<number, number>> {
   const doc = await pdfjs
-    .getDocument({ data: new Uint8Array(buffer), disableWorker: true })
+    .getDocument({ data: new Uint8Array(buffer), disableWorker: true } as Parameters<typeof pdfjs.getDocument>[0])
     .promise;
   const pageMap = new Map<number, number>();
 
@@ -106,7 +106,7 @@ async function mapQuestionPages(
 
 async function extractTextFromPages(buffer: Buffer, startPage = 1): Promise<string> {
   const doc = await pdfjs
-    .getDocument({ data: new Uint8Array(buffer), disableWorker: true })
+    .getDocument({ data: new Uint8Array(buffer), disableWorker: true } as Parameters<typeof pdfjs.getDocument>[0])
     .promise;
   const parts: string[] = [];
 
