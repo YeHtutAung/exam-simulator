@@ -26,7 +26,8 @@ export function CredentialsSignInForm() {
     });
     setIsSubmitting(false);
     if (result?.ok) {
-      router.push("/signin");
+      router.push("/dashboard");
+      router.refresh();
       return;
     }
     setError("Invalid email or password. Please try again.");

@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { forgotPasswordSchema } from "@/lib/validators/auth";
 import { getClientIp, rateLimit } from "@/lib/rateLimit";
-import { getBaseUrl, sendEmail } from "@/lib/email";
+import { sendEmail } from "@/lib/email";
+import { getBaseUrl } from "@/lib/url";
 import { randomBytes } from "node:crypto";
 
 export async function POST(request: Request) {
