@@ -83,10 +83,16 @@ export const authOptions: NextAuthOptions = {
       if (!user?.email) return false;
 
       const dbUser = await prisma.user.findUnique({
-        where: { id: user.id },
+        where: { email: user.email },
         select: { status: true, deletedAt: true, role: true, email: true },
       });
-      if (!dbUser || dbUser.status === "SUSPENDED" || dbUser.deletedAt) return false;
+
+      // New user (first OAuth sign-in) — allow, adapter will create them
+      if (!dbUser) {
+        return true;
+      }
+
+      if (dbUser.status === "SUSPENDED" || dbUser.deletedAt) return false;
 
       if (isOwnerEmail(user.email) && dbUser.role !== "OWNER") {
         await prisma.user.updateMany({
