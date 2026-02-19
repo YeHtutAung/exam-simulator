@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { PublishDraftButton } from "@/components/admin/PublishDraftButton";
 
 const TOPIC_PRESETS = [
@@ -336,12 +335,9 @@ export function ImportDraftReviewPanel({ initial }: { initial: DraftResponse }) 
                   <td className="px-4 py-3 font-semibold">{question.questionNo}</td>
                   <td className="px-4 py-3">
                     {question.stemImageUrl ? (
-                      <Image
+                      <img
                         src={question.stemImageUrl}
                         alt={`Q${question.questionNo}`}
-                        width={80}
-                        height={100}
-                        sizes="80px"
                         className="h-auto w-20 rounded border border-sand-300 object-contain"
                         loading="lazy"
                       />
