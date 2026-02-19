@@ -6,8 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { requireOwnerApi } from "@/lib/rbac";
 
 function getImportBaseDir(): string {
-  // Handle WSL/Windows path issues
-  // If homedir looks like a Unix path but we're on Windows, use USERPROFILE or a fallback
+  if (process.env.IMPORT_DIR) return process.env.IMPORT_DIR;
+  if (process.env.NODE_ENV === "production") return "/app/data/imports";
   const homeDir = process.env.USERPROFILE || process.env.HOME || os.homedir();
   return path.join(homeDir, ".exam-simulator", "imports");
 }

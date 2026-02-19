@@ -43,8 +43,8 @@ COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/node_modules/dotenv ./node_modules/dotenv
 
-# Ensure uploads directory exists
-RUN mkdir -p /app/public/uploads && chown -R nextjs:nodejs /app
+# Ensure uploads and imports directories exist
+RUN mkdir -p /app/public/uploads /app/data/imports && chown -R nextjs:nodejs /app
 
 USER nextjs
 EXPOSE 3000

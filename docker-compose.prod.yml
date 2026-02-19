@@ -34,6 +34,7 @@ services:
       SMTP_FROM: ${SMTP_FROM}
     volumes:
       - uploads:/app/public/uploads
+      - imports:/app/data/imports
     expose:
       - "3000"
 
@@ -56,5 +57,6 @@ services:
 volumes:
   pgdata:
   uploads:
+  imports:
   caddy_data:
   caddy_config:
