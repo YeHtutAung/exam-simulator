@@ -43,6 +43,12 @@ COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/node_modules/dotenv ./node_modules/dotenv
 
+# Copy native modules for PDF import pipeline
+COPY --from=builder /app/node_modules/@napi-rs ./node_modules/@napi-rs
+COPY --from=builder /app/node_modules/sharp ./node_modules/sharp
+COPY --from=builder /app/node_modules/pdfjs-dist ./node_modules/pdfjs-dist
+COPY --from=builder /app/node_modules/pdf-parse ./node_modules/pdf-parse
+
 # Ensure uploads and imports directories exist
 RUN mkdir -p /app/public/uploads /app/data/imports && chown -R nextjs:nodejs /app
 
