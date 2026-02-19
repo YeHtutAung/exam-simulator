@@ -126,6 +126,11 @@ export async function POST(request: Request) {
     );
   }
 
+  // Trigger worker in background (dynamic import to avoid Turbopack bundling native modules)
+  import("@/scripts/importWorker")
+    .then((mod) => mod.processNextImportDraftOnce())
+    .catch((err) => console.error("Import worker error:", err));
+
   return NextResponse.json({
     draftId: draft.id,
   });

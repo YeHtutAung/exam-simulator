@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  serverExternalPackages: ["@napi-rs/canvas", "sharp", "pdfjs-dist", "pdf-parse"],
   images: {
     remotePatterns: [
       {
