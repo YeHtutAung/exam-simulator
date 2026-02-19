@@ -127,6 +127,7 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/signin",
   },
+  trustHost: true,
 };
 
 export async function getServerAuthSession() {
