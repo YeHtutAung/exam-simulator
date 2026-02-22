@@ -2,8 +2,13 @@ import { ImportDraftForm } from "@/components/admin/ImportDraftForm";
 import { prisma } from "@/lib/prisma";
 import { requireOwner } from "@/lib/rbac";
 
-export default async function AdminImportPage() {
+export default async function AdminImportPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ examId?: string }>;
+}) {
   await requireOwner();
+  const { examId } = await searchParams;
   const exams = await prisma.exam.findMany({
     where: { questions: { none: {} } },
     orderBy: { createdAt: "desc" },
@@ -15,7 +20,7 @@ export default async function AdminImportPage() {
         <p className="text-sm font-semibold uppercase text-slate-500">Admin</p>
         <h1 className="text-2xl font-semibold">Import draft</h1>
       </div>
-      <ImportDraftForm exams={exams} />
+      <ImportDraftForm exams={exams} defaultValues={examId ? { examId } : undefined} />
     </div>
   );
 }

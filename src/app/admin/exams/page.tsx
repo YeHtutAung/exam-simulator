@@ -7,6 +7,7 @@ export default async function AdminExamsPage() {
   await requireOwner();
   const exams = await prisma.exam.findMany({
     orderBy: { createdAt: "desc" },
+    include: { _count: { select: { questions: true } } },
   });
 
   return (
@@ -41,6 +42,11 @@ export default async function AdminExamsPage() {
               <Link href={`/admin/exams/${exam.id}/questions`} className="font-semibold text-accent">
                 Questions
               </Link>
+              {exam._count.questions === 0 && (
+                <Link href={`/admin/import?examId=${exam.id}`} className="font-semibold text-emerald-600">
+                  Import
+                </Link>
+              )}
               <Link href={`/admin/exams/${exam.id}/edit`} className="font-semibold text-slate-600">
                 Edit
               </Link>
